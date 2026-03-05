@@ -99,124 +99,118 @@ const AuthPage: React.FC = () => {
     }
   };
 
-  const pageStyles: React.CSSProperties = {
-    minHeight: '100vh',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: theme.colors.background.primary,
-    padding: theme.spacing.lg,
-  };
-
-  const containerStyles: React.CSSProperties = {
-    width: '100%',
-    maxWidth: '450px',
-  };
-
-  const headerStyles: React.CSSProperties = {
-    textAlign: 'center',
-    marginBottom: theme.spacing.xl,
-  };
-
-  const logoStyles: React.CSSProperties = {
-    fontSize: '2.5rem',
-    marginBottom: theme.spacing.md,
-  };
-
-  const titleStyles: React.CSSProperties = {
-    fontSize: theme.typography.fontSize.xxxl,
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.text.primary,
-    margin: 0,
-    marginBottom: theme.spacing.sm,
-  };
-
-  const subtitleStyles: React.CSSProperties = {
-    fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.text.secondary,
-    margin: 0,
-  };
-
-  const formStyles: React.CSSProperties = {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: theme.spacing.md,
-  };
-
-  const inputGroupStyles: React.CSSProperties = {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: theme.spacing.xs,
-  };
-
-  const errorStyles: React.CSSProperties = {
-    padding: theme.spacing.md,
-    backgroundColor: `${theme.colors.danger}20`,
-    border: `1px solid ${theme.colors.danger}`,
-    borderRadius: theme.borderRadius.md,
-    color: theme.colors.danger,
-    fontSize: theme.typography.fontSize.sm,
-    margin: 0,
-  };
-
-  const successStyles: React.CSSProperties = {
-    padding: theme.spacing.md,
-    backgroundColor: `${theme.colors.success}20`,
-    border: `1px solid ${theme.colors.success}`,
-    borderRadius: theme.borderRadius.md,
-    color: theme.colors.success,
-    fontSize: theme.typography.fontSize.sm,
-    margin: 0,
-  };
-
-  const submitButtonStyles: React.CSSProperties = {
-    width: '100%',
-  };
-
-  const toggleModeStyles: React.CSSProperties = {
-    textAlign: 'center',
-    paddingTop: theme.spacing.md,
-    borderTop: `1px solid ${theme.colors.gray[800]}`,
-  };
-
-  const toggleTextStyles: React.CSSProperties = {
-    fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.text.secondary,
-    margin: 0,
-    marginBottom: theme.spacing.sm,
-  };
-
-  const toggleLinkStyles: React.CSSProperties = {
-    color: theme.colors.primary,
-    cursor: 'pointer',
-    fontWeight: theme.typography.fontWeight.semibold,
-    textDecoration: 'none',
-    transition: 'opacity 0.2s ease',
-  };
-
   if (isLoading) {
     return <Loading fullScreen />;
   }
 
   return (
-    <div style={pageStyles}>
-      <div style={containerStyles}>
-        <div style={headerStyles}>
-          <div style={logoStyles}>🎵</div>
-          <h1 style={titleStyles}>SoundMoney</h1>
-          <p style={subtitleStyles}>
+    <div
+      style={{
+        minHeight: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: theme.colors.background.primary,
+        padding: theme.spacing.lg,
+        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+      }}
+    >
+      <div
+        style={{
+          width: '100%',
+          maxWidth: '450px',
+        }}
+      >
+        {/* Header */}
+        <div
+          style={{
+            textAlign: 'center',
+            marginBottom: theme.spacing.xl,
+          }}
+        >
+          <div
+            style={{
+              fontSize: '3rem',
+              marginBottom: theme.spacing.md,
+            }}
+          >
+            🎵
+          </div>
+          <h1
+            style={{
+              fontSize: '2.5rem',
+              fontWeight: 700,
+              color: theme.colors.text.primary,
+              margin: 0,
+              marginBottom: theme.spacing.sm,
+              letterSpacing: '-0.5px',
+            }}
+          >
+            SoundMoney
+          </h1>
+          <p
+            style={{
+              fontSize: '1rem',
+              color: theme.colors.text.secondary,
+              margin: 0,
+            }}
+          >
             {mode === 'login' ? 'Welcome back' : 'Join the movement'}
           </p>
         </div>
 
-        <Card>
-          <form style={formStyles} onSubmit={mode === 'login' ? handleLogin : handleSignup}>
-            {error && <p style={errorStyles}>{error}</p>}
-            {success && <p style={successStyles}>{success}</p>}
+        {/* Form Card */}
+        <Card
+          style={{
+            padding: theme.spacing.xl,
+          }}
+        >
+          <form
+            onSubmit={mode === 'login' ? handleLogin : handleSignup}
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: theme.spacing.md,
+            }}
+          >
+            {/* Error Message */}
+            {error && (
+              <div
+                style={{
+                  padding: theme.spacing.md,
+                  backgroundColor: `${theme.colors.danger}20`,
+                  border: `1px solid ${theme.colors.danger}`,
+                  borderRadius: theme.borderRadius.md,
+                  color: theme.colors.danger,
+                  fontSize: '0.875rem',
+                  lineHeight: '1.5',
+                }}
+              >
+                {error}
+              </div>
+            )}
 
-            <div style={inputGroupStyles}>
+            {/* Success Message */}
+            {success && (
+              <div
+                style={{
+                  padding: theme.spacing.md,
+                  backgroundColor: `${theme.colors.success}20`,
+                  border: `1px solid ${theme.colors.success}`,
+                  borderRadius: theme.borderRadius.md,
+                  color: theme.colors.success,
+                  fontSize: '0.875rem',
+                  lineHeight: '1.5',
+                }}
+              >
+                {success}
+              </div>
+            )}
+
+            {/* Email Input */}
+            <div>
               <Input
-                label="Email"
+                label="Email Address"
                 type="email"
                 placeholder="your@email.com"
                 value={email}
@@ -225,8 +219,9 @@ const AuthPage: React.FC = () => {
               />
             </div>
 
+            {/* Username Input - Signup Only */}
             {mode === 'signup' && (
-              <div style={inputGroupStyles}>
+              <div>
                 <Input
                   label="Username"
                   type="text"
@@ -238,7 +233,8 @@ const AuthPage: React.FC = () => {
               </div>
             )}
 
-            <div style={inputGroupStyles}>
+            {/* Password Input */}
+            <div>
               <Input
                 label="Password"
                 type="password"
@@ -249,8 +245,9 @@ const AuthPage: React.FC = () => {
               />
             </div>
 
+            {/* Confirm Password - Signup Only */}
             {mode === 'signup' && (
-              <div style={inputGroupStyles}>
+              <div>
                 <Input
                   label="Confirm Password"
                   type="password"
@@ -262,23 +259,41 @@ const AuthPage: React.FC = () => {
               </div>
             )}
 
+            {/* Submit Button */}
             <Button
               variant="primary"
               size="md"
-              style={submitButtonStyles}
+              style={{
+                width: '100%',
+                marginTop: theme.spacing.md,
+              }}
               type="submit"
               disabled={isLoading}
             >
               {isLoading ? 'Loading...' : mode === 'login' ? 'Sign In' : 'Create Account'}
             </Button>
 
-            <div style={toggleModeStyles}>
-              <p style={toggleTextStyles}>
+            {/* Toggle Mode */}
+            <div
+              style={{
+                textAlign: 'center',
+                paddingTop: theme.spacing.md,
+                borderTop: `1px solid ${theme.colors.gray[800]}`,
+                marginTop: theme.spacing.md,
+              }}
+            >
+              <p
+                style={{
+                  fontSize: '0.875rem',
+                  color: theme.colors.text.secondary,
+                  margin: 0,
+                  marginBottom: theme.spacing.sm,
+                }}
+              >
                 {mode === 'login' ? "Don't have an account?" : 'Already have an account?'}
               </p>
               <button
                 type="button"
-                style={toggleLinkStyles}
                 onClick={() => {
                   setMode(mode === 'login' ? 'signup' : 'login');
                   setError('');
@@ -287,6 +302,17 @@ const AuthPage: React.FC = () => {
                   setPassword('');
                   setUsername('');
                   setConfirmPassword('');
+                }}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: theme.colors.primary,
+                  cursor: 'pointer',
+                  fontWeight: 600,
+                  fontSize: '0.875rem',
+                  padding: 0,
+                  textDecoration: 'underline',
+                  transition: 'opacity 0.2s ease',
                 }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.opacity = '0.8';
@@ -301,24 +327,21 @@ const AuthPage: React.FC = () => {
           </form>
         </Card>
 
+        {/* Footer Info */}
         <div
           style={{
             marginTop: theme.spacing.lg,
             padding: theme.spacing.md,
             backgroundColor: theme.colors.background.secondary,
             borderRadius: theme.borderRadius.md,
-            fontSize: theme.typography.fontSize.xs,
+            fontSize: '0.75rem',
             color: theme.colors.text.secondary,
             textAlign: 'center',
             lineHeight: '1.6',
           }}
         >
-          <p style={{ margin: 0, marginBottom: theme.spacing.sm }}>
-            🔒 Your data is secure with Supabase
-          </p>
-          <p style={{ margin: 0 }}>
-            Test account: Use any email with password (min 6 chars)
-          </p>
+          <p style={{ margin: '0 0 0.5rem 0' }}>🔒 Your data is secure with Supabase</p>
+          <p style={{ margin: 0 }}>Test signup with any email and password (min 6 chars)</p>
         </div>
       </div>
     </div>
