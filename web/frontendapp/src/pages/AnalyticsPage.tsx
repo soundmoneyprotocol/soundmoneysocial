@@ -1,5 +1,5 @@
 import React from 'react';
-import { Container, Header, Card, Badge } from '@/components';
+import { Container, Header, Card, Badge } from '../components';
 import { theme } from '../theme/theme';
 import { formatNumber } from '../utils/formatters';
 
@@ -67,6 +67,11 @@ const AnalyticsPage: React.FC = () => {
     fontWeight: theme.typography.fontWeight.bold,
     color: theme.colors.primary,
     margin: 0,
+  };
+
+  const metricValueSmallStyles: React.CSSProperties = {
+    ...metricValueStyles,
+    fontSize: theme.typography.fontSize.xl,
   };
 
   const chartContainerStyles: React.CSSProperties = {
@@ -161,7 +166,7 @@ const AnalyticsPage: React.FC = () => {
 
         <Card style={metricCardStyles}>
           <p style={metricLabelStyles}>Avg. Time on Page</p>
-          <p style={metricValueStyles} style={{ fontSize: theme.typography.fontSize.xl }}>
+          <p style={metricValueSmallStyles}>
             {analytics.avgTimeOnPage}
           </p>
           <Badge variant="info" size="sm" style={{ marginTop: theme.spacing.md }}>

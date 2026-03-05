@@ -23,13 +23,7 @@ const Card = React.forwardRef<HTMLDivElement, CardProps>(
       return (
         <div
           ref={ref}
-          style={{
-            ...cardStyles,
-            ':hover': {
-              boxShadow: theme.shadow.lg,
-              transform: 'translateY(-2px)',
-            },
-          }}
+          style={cardStyles}
           onMouseEnter={(e) => {
             e.currentTarget.style.boxShadow = theme.shadow.lg;
             e.currentTarget.style.transform = 'translateY(-2px)';

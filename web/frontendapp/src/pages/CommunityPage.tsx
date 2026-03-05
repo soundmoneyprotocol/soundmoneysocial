@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Container, Header, Card, Button, Avatar, Badge, Input } from '@/components';
+import { Container, Header, Card, Button, Avatar, Badge, Input } from '../components';
 import { theme } from '../theme/theme';
 import { formatNumber } from '../utils/formatters';
 
