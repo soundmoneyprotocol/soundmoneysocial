@@ -5,11 +5,13 @@ import { useAuth } from '../contexts/AuthContext';
 import { theme } from '../theme/theme';
 
 type AuthMode = 'login' | 'signup';
+type AuthState = 'form' | 'email-confirmation';
 
 const AuthPage: React.FC = () => {
   const navigate = useNavigate();
   const { login, signup } = useAuth();
   const [mode, setMode] = useState<AuthMode>('login');
+  const [authState, setAuthState] = useState<AuthState>('form');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [username, setUsername] = useState('');
@@ -90,8 +92,7 @@ const AuthPage: React.FC = () => {
 
     try {
       await signup(email, password, username);
-      setSuccess('Account created! Redirecting...');
-      setTimeout(() => navigate('/'), 1500);
+      setAuthState('email-confirmation');
     } catch (err: any) {
       setError(err.message || 'Failed to create account. Please try again.');
     } finally {
@@ -155,177 +156,307 @@ const AuthPage: React.FC = () => {
               margin: 0,
             }}
           >
-            {mode === 'login' ? 'Welcome back' : 'Join the movement'}
+            {authState === 'email-confirmation'
+              ? 'Verify your email'
+              : mode === 'login'
+              ? 'Welcome back'
+              : 'Join the movement'}
           </p>
         </div>
 
-        {/* Form Card */}
-        <Card
-          style={{
-            padding: theme.spacing.xl,
-          }}
-        >
-          <form
-            onSubmit={mode === 'login' ? handleLogin : handleSignup}
+        {/* Email Confirmation State */}
+        {authState === 'email-confirmation' ? (
+          <Card
             style={{
-              display: 'flex',
-              flexDirection: 'column',
-              gap: theme.spacing.md,
+              padding: theme.spacing.xl,
             }}
           >
-            {/* Error Message */}
-            {error && (
-              <div
-                style={{
-                  padding: theme.spacing.md,
-                  backgroundColor: `${theme.colors.danger}20`,
-                  border: `1px solid ${theme.colors.danger}`,
-                  borderRadius: theme.borderRadius.md,
-                  color: theme.colors.danger,
-                  fontSize: '0.875rem',
-                  lineHeight: '1.5',
-                }}
-              >
-                {error}
-              </div>
-            )}
-
-            {/* Success Message */}
-            {success && (
-              <div
-                style={{
-                  padding: theme.spacing.md,
-                  backgroundColor: `${theme.colors.success}20`,
-                  border: `1px solid ${theme.colors.success}`,
-                  borderRadius: theme.borderRadius.md,
-                  color: theme.colors.success,
-                  fontSize: '0.875rem',
-                  lineHeight: '1.5',
-                }}
-              >
-                {success}
-              </div>
-            )}
-
-            {/* Email Input */}
-            <div>
-              <Input
-                label="Email Address"
-                type="email"
-                placeholder="your@email.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                disabled={isLoading}
-              />
-            </div>
-
-            {/* Username Input - Signup Only */}
-            {mode === 'signup' && (
-              <div>
-                <Input
-                  label="Username"
-                  type="text"
-                  placeholder="Choose your username"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  disabled={isLoading}
-                />
-              </div>
-            )}
-
-            {/* Password Input */}
-            <div>
-              <Input
-                label="Password"
-                type="password"
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                disabled={isLoading}
-              />
-            </div>
-
-            {/* Confirm Password - Signup Only */}
-            {mode === 'signup' && (
-              <div>
-                <Input
-                  label="Confirm Password"
-                  type="password"
-                  placeholder="••••••••"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  disabled={isLoading}
-                />
-              </div>
-            )}
-
-            {/* Submit Button */}
-            <Button
-              variant="primary"
-              size="md"
-              style={{
-                width: '100%',
-                marginTop: theme.spacing.md,
-              }}
-              type="submit"
-              disabled={isLoading}
-            >
-              {isLoading ? 'Loading...' : mode === 'login' ? 'Sign In' : 'Create Account'}
-            </Button>
-
-            {/* Toggle Mode */}
             <div
               style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: theme.spacing.lg,
+                alignItems: 'center',
                 textAlign: 'center',
-                paddingTop: theme.spacing.md,
-                borderTop: `1px solid ${theme.colors.gray[800]}`,
-                marginTop: theme.spacing.md,
               }}
             >
-              <p
+              <div
                 style={{
-                  fontSize: '0.875rem',
-                  color: theme.colors.text.secondary,
-                  margin: 0,
-                  marginBottom: theme.spacing.sm,
+                  fontSize: '3rem',
+                  marginBottom: theme.spacing.md,
                 }}
               >
-                {mode === 'login' ? "Don't have an account?" : 'Already have an account?'}
-              </p>
-              <button
-                type="button"
+                ✉️
+              </div>
+
+              <div>
+                <h2
+                  style={{
+                    fontSize: '1.5rem',
+                    fontWeight: 600,
+                    color: theme.colors.text.primary,
+                    margin: 0,
+                    marginBottom: theme.spacing.sm,
+                  }}
+                >
+                  Check your email
+                </h2>
+                <p
+                  style={{
+                    fontSize: '0.95rem',
+                    color: theme.colors.text.secondary,
+                    margin: 0,
+                    lineHeight: '1.6',
+                  }}
+                >
+                  We've sent a confirmation link to <strong>{email}</strong>. Click it to verify your email and activate your account.
+                </p>
+              </div>
+
+              <div
+                style={{
+                  padding: theme.spacing.md,
+                  backgroundColor: theme.colors.background.secondary,
+                  borderRadius: theme.borderRadius.md,
+                  border: `1px solid ${theme.colors.gray[800]}`,
+                  width: '100%',
+                  fontSize: '0.85rem',
+                  color: theme.colors.text.secondary,
+                  lineHeight: '1.6',
+                }}
+              >
+                <p style={{ margin: 0, marginBottom: theme.spacing.sm }}>
+                  💡 <strong>Didn't receive the email?</strong>
+                </p>
+                <ul style={{ margin: 0, paddingLeft: theme.spacing.lg }}>
+                  <li>Check your spam folder</li>
+                  <li>Try a different email address</li>
+                  <li>Make sure the email is spelled correctly</li>
+                </ul>
+              </div>
+
+              <Button
+                variant="outline"
+                size="md"
+                style={{
+                  width: '100%',
+                }}
                 onClick={() => {
-                  setMode(mode === 'login' ? 'signup' : 'login');
-                  setError('');
-                  setSuccess('');
+                  setAuthState('form');
+                  setMode('signup');
                   setEmail('');
                   setPassword('');
                   setUsername('');
                   setConfirmPassword('');
-                }}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  color: theme.colors.primary,
-                  cursor: 'pointer',
-                  fontWeight: 600,
-                  fontSize: '0.875rem',
-                  padding: 0,
-                  textDecoration: 'underline',
-                  transition: 'opacity 0.2s ease',
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.opacity = '0.8';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.opacity = '1';
+                  setError('');
                 }}
               >
-                {mode === 'login' ? 'Sign up here' : 'Sign in here'}
-              </button>
+                Try a different email
+              </Button>
+
+              <p
+                style={{
+                  fontSize: '0.85rem',
+                  color: theme.colors.text.secondary,
+                  margin: 0,
+                  paddingTop: theme.spacing.md,
+                  borderTop: `1px solid ${theme.colors.gray[800]}`,
+                  width: '100%',
+                  paddingTop: theme.spacing.md,
+                }}
+              >
+                Already verified?{' '}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAuthState('form');
+                    setMode('login');
+                    setError('');
+                  }}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    color: theme.colors.primary,
+                    cursor: 'pointer',
+                    fontWeight: 600,
+                    textDecoration: 'underline',
+                    padding: 0,
+                  }}
+                >
+                  Sign in here
+                </button>
+              </p>
             </div>
-          </form>
-        </Card>
+          </Card>
+        ) : (
+          /* Form State */
+          <Card
+            style={{
+              padding: theme.spacing.xl,
+            }}
+          >
+            <form
+              onSubmit={mode === 'login' ? handleLogin : handleSignup}
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: theme.spacing.md,
+              }}
+            >
+              {/* Error Message */}
+              {error && (
+                <div
+                  style={{
+                    padding: theme.spacing.md,
+                    backgroundColor: `${theme.colors.danger}20`,
+                    border: `1px solid ${theme.colors.danger}`,
+                    borderRadius: theme.borderRadius.md,
+                    color: theme.colors.danger,
+                    fontSize: '0.875rem',
+                    lineHeight: '1.5',
+                  }}
+                >
+                  {error}
+                </div>
+              )}
+
+              {/* Success Message */}
+              {success && (
+                <div
+                  style={{
+                    padding: theme.spacing.md,
+                    backgroundColor: `${theme.colors.success}20`,
+                    border: `1px solid ${theme.colors.success}`,
+                    borderRadius: theme.borderRadius.md,
+                    color: theme.colors.success,
+                    fontSize: '0.875rem',
+                    lineHeight: '1.5',
+                  }}
+                >
+                  {success}
+                </div>
+              )}
+
+              {/* Email Input */}
+              <div>
+                <Input
+                  label="Email Address"
+                  type="email"
+                  placeholder="your@email.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  disabled={isLoading}
+                />
+              </div>
+
+              {/* Username Input - Signup Only */}
+              {mode === 'signup' && (
+                <div>
+                  <Input
+                    label="Username"
+                    type="text"
+                    placeholder="Choose your username"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    disabled={isLoading}
+                  />
+                </div>
+              )}
+
+              {/* Password Input */}
+              <div>
+                <Input
+                  label="Password"
+                  type="password"
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  disabled={isLoading}
+                />
+              </div>
+
+              {/* Confirm Password - Signup Only */}
+              {mode === 'signup' && (
+                <div>
+                  <Input
+                    label="Confirm Password"
+                    type="password"
+                    placeholder="••••••••"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    disabled={isLoading}
+                  />
+                </div>
+              )}
+
+              {/* Submit Button */}
+              <Button
+                variant="primary"
+                size="md"
+                style={{
+                  width: '100%',
+                  marginTop: theme.spacing.md,
+                }}
+                type="submit"
+                disabled={isLoading}
+              >
+                {isLoading ? 'Loading...' : mode === 'login' ? 'Sign In' : 'Create Account'}
+              </Button>
+
+              {/* Toggle Mode */}
+              <div
+                style={{
+                  textAlign: 'center',
+                  paddingTop: theme.spacing.md,
+                  borderTop: `1px solid ${theme.colors.gray[800]}`,
+                  marginTop: theme.spacing.md,
+                }}
+              >
+                <p
+                  style={{
+                    fontSize: '0.875rem',
+                    color: theme.colors.text.secondary,
+                    margin: 0,
+                    marginBottom: theme.spacing.sm,
+                  }}
+                >
+                  {mode === 'login' ? "Don't have an account?" : 'Already have an account?'}
+                </p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMode(mode === 'login' ? 'signup' : 'login');
+                    setError('');
+                    setSuccess('');
+                    setEmail('');
+                    setPassword('');
+                    setUsername('');
+                    setConfirmPassword('');
+                  }}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    color: theme.colors.primary,
+                    cursor: 'pointer',
+                    fontWeight: 600,
+                    fontSize: '0.875rem',
+                    padding: 0,
+                    textDecoration: 'underline',
+                    transition: 'opacity 0.2s ease',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.opacity = '0.8';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.opacity = '1';
+                  }}
+                >
+                  {mode === 'login' ? 'Sign up here' : 'Sign in here'}
+                </button>
+              </div>
+            </form>
+          </Card>
+        )}
 
         {/* Footer Info */}
         <div
@@ -341,7 +472,7 @@ const AuthPage: React.FC = () => {
           }}
         >
           <p style={{ margin: '0 0 0.5rem 0' }}>🔒 Your data is secure with Supabase</p>
-          <p style={{ margin: 0 }}>Test signup with any email and password (min 6 chars)</p>
+          <p style={{ margin: 0 }}>Verify your email to activate your account</p>
         </div>
       </div>
     </div>
