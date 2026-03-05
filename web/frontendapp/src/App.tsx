@@ -4,9 +4,12 @@ import {
   Route,
   useNavigationType,
   useLocation,
+  Navigate,
 } from "react-router-dom";
-import { AuthProvider } from "./contexts/AuthContext";
+import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import Navigation from "./components/Navigation";
+import { Loading } from "./components";
+import AuthPage from "./pages/AuthPage";
 import FeedPage from "./pages/FeedPage";
 import DashboardPage from "./pages/DashboardPage";
 import AnalyticsPage from "./pages/AnalyticsPage";
@@ -32,10 +35,35 @@ const pageMetadata: { [key: string]: { title: string; description: string } } = 
   },
 };
 
+// Protected route wrapper
+interface ProtectedRouteProps {
+  element: React.ReactElement;
+}
+
+function ProtectedRoute({ element }: ProtectedRouteProps) {
+  const { isAuthenticated, isLoading } = useAuth();
+
+  if (isLoading) {
+    return <Loading fullScreen />;
+  }
+
+  if (!isAuthenticated) {
+    return <Navigate to="/auth" replace />;
+  }
+
+  return element;
+}
+
 function AppContent() {
   const action = useNavigationType();
   const location = useLocation();
   const pathname = location.pathname;
+  const { isLoading, isAuthenticated } = useAuth();
+
+  // Show loading while checking auth
+  if (isLoading) {
+    return <Loading fullScreen />;
+  }
 
   // Scroll to top on route change
   useEffect(() => {
@@ -63,12 +91,14 @@ function AppContent() {
 
   return (
     <>
-      <Navigation />
+      {isAuthenticated && <Navigation />}
       <Routes>
-        <Route path="/" element={<FeedPage />} />
-        <Route path="/dashboard" element={<DashboardPage />} />
-        <Route path="/analytics" element={<AnalyticsPage />} />
-        <Route path="/community" element={<CommunityPage />} />
+        <Route path="/auth" element={<AuthPage />} />
+        <Route path="/" element={<ProtectedRoute element={<FeedPage />} />} />
+        <Route path="/dashboard" element={<ProtectedRoute element={<DashboardPage />} />} />
+        <Route path="/analytics" element={<ProtectedRoute element={<AnalyticsPage />} />} />
+        <Route path="/community" element={<ProtectedRoute element={<CommunityPage />} />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </>
   );
