@@ -5,42 +5,48 @@ import {
   useNavigationType,
   useLocation,
 } from "react-router-dom";
+import { AuthProvider } from "./contexts/AuthContext";
 import SolarahPodcasts from "./pages/SolarahPodcasts";
 import Dashboard from "./pages/Dashboard";
 
-function App() {
+// Page metadata
+const pageMetadata: { [key: string]: { title: string; description: string } } = {
+  "/": {
+    title: "SoundMoney Social - Share Music, Earn Rewards",
+    description: "Connect with artists and earn BEZY tokens by sharing and engaging with music on SoundMoney Social",
+  },
+  "/dashboard": {
+    title: "Dashboard - SoundMoney Social",
+    description: "View your profile, earnings, and engagement metrics",
+  },
+};
+
+function AppContent() {
   const action = useNavigationType();
   const location = useLocation();
   const pathname = location.pathname;
 
+  // Scroll to top on route change
   useEffect(() => {
     if (action !== "POP") {
       window.scrollTo(0, 0);
     }
   }, [action, pathname]);
 
+  // Update document title and meta description
   useEffect(() => {
-    let title = "";
-    let metaDescription = "";
+    const metadata = pageMetadata[pathname] || {
+      title: "SoundMoney Social",
+      description: "Social platform for music creators and fans",
+    };
 
-    switch (pathname) {
-      case "/":
-        title = "";
-        metaDescription = "";
-        break;
-    }
+    document.title = metadata.title;
 
-    if (title) {
-      document.title = title;
-    }
-
-    if (metaDescription) {
-      const metaDescriptionTag: HTMLMetaElement | null = document.querySelector(
-        'head > meta[name="description"]'
-      );
-      if (metaDescriptionTag) {
-        metaDescriptionTag.content = metaDescription;
-      }
+    const metaDescriptionTag: HTMLMetaElement | null = document.querySelector(
+      'head > meta[name="description"]'
+    );
+    if (metaDescriptionTag) {
+      metaDescriptionTag.content = metadata.description;
     }
   }, [pathname]);
 
@@ -51,4 +57,13 @@ function App() {
     </Routes>
   );
 }
+
+function App() {
+  return (
+    <AuthProvider>
+      <AppContent />
+    </AuthProvider>
+  );
+}
+
 export default App;
