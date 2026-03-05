@@ -262,7 +262,6 @@ const AuthPage: React.FC = () => {
                   paddingTop: theme.spacing.md,
                   borderTop: `1px solid ${theme.colors.gray[800]}`,
                   width: '100%',
-                  paddingTop: theme.spacing.md,
                 }}
               >
                 Already verified?{' '}
