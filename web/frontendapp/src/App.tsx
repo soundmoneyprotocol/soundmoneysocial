@@ -6,6 +6,7 @@ import {
   useLocation,
 } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
+import Navigation from "./components/Navigation";
 import FeedPage from "./pages/FeedPage";
 import DashboardPage from "./pages/DashboardPage";
 import AnalyticsPage from "./pages/AnalyticsPage";
@@ -61,12 +62,15 @@ function AppContent() {
   }, [pathname]);
 
   return (
-    <Routes>
-      <Route path="/" element={<FeedPage />} />
-      <Route path="/dashboard" element={<DashboardPage />} />
-      <Route path="/analytics" element={<AnalyticsPage />} />
-      <Route path="/community" element={<CommunityPage />} />
-    </Routes>
+    <>
+      <Navigation />
+      <Routes>
+        <Route path="/" element={<FeedPage />} />
+        <Route path="/dashboard" element={<DashboardPage />} />
+        <Route path="/analytics" element={<AnalyticsPage />} />
+        <Route path="/community" element={<CommunityPage />} />
+      </Routes>
+    </>
   );
 }
 
