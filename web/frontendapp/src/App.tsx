@@ -6,18 +6,28 @@ import {
   useLocation,
 } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
-import SolarahPodcasts from "./pages/SolarahPodcasts";
-import Dashboard from "./pages/Dashboard";
+import FeedPage from "./pages/FeedPage";
+import DashboardPage from "./pages/DashboardPage";
+import AnalyticsPage from "./pages/AnalyticsPage";
+import CommunityPage from "./pages/CommunityPage";
 
 // Page metadata
 const pageMetadata: { [key: string]: { title: string; description: string } } = {
   "/": {
-    title: "SoundMoney Social - Share Music, Earn Rewards",
-    description: "Connect with artists and earn BEZY tokens by sharing and engaging with music on SoundMoney Social",
+    title: "Social Feed - SoundMoney",
+    description: "Connect with artists and earn BEZY tokens by sharing and engaging with music",
   },
   "/dashboard": {
     title: "Dashboard - SoundMoney Social",
     description: "View your profile, earnings, and engagement metrics",
+  },
+  "/analytics": {
+    title: "Analytics - SoundMoney Social",
+    description: "Track your performance and engagement analytics",
+  },
+  "/community": {
+    title: "Community - SoundMoney Social",
+    description: "Discover amazing creators and join the SoundMoney movement",
   },
 };
 
@@ -52,8 +62,10 @@ function AppContent() {
 
   return (
     <Routes>
-      <Route path="/" element={<SolarahPodcasts />} />
-      <Route path="/dashboard" element={<Dashboard />} />
+      <Route path="/" element={<FeedPage />} />
+      <Route path="/dashboard" element={<DashboardPage />} />
+      <Route path="/analytics" element={<AnalyticsPage />} />
+      <Route path="/community" element={<CommunityPage />} />
     </Routes>
   );
 }
