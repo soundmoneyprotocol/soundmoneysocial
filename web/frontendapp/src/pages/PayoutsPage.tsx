@@ -59,6 +59,9 @@ const PayoutsPage: React.FC = () => {
     accountDetails: '',
   });
 
+  const [showEarningModal, setShowEarningModal] = useState(false);
+  const [earningStep, setEarningStep] = useState(1);
+
   const handleRequestPayout = () => {
     if (!payoutForm.amount || parseFloat(payoutForm.amount) > walletData.availableBalance) {
       alert('❌ Invalid amount. Please check your available balance.');
@@ -68,6 +71,21 @@ const PayoutsPage: React.FC = () => {
     alert(`✅ Payout request submitted for ${payoutForm.amount} BZY via ${payoutForm.method}`);
     setPayoutForm({ amount: '', method: 'bank', accountDetails: '' });
     setShowPayoutForm(false);
+  };
+
+  const handleStartEarning = () => {
+    setShowEarningModal(true);
+    setEarningStep(walletConnected ? 2 : 1);
+  };
+
+  const handleCloseEarningModal = () => {
+    setShowEarningModal(false);
+    setEarningStep(1);
+  };
+
+  const handleGoToFeed = () => {
+    handleCloseEarningModal();
+    navigate('/feed');
   };
 
   const balanceCardStyles: React.CSSProperties = {
@@ -152,6 +170,7 @@ const PayoutsPage: React.FC = () => {
         localStorage.setItem('privy_wallet_id', wallet.id);
         setShowMagicLinkForm(false);
         alert('✅ Wallet connected successfully!');
+        setEarningStep(2);
       }
     } catch (error) {
       alert('❌ Error connecting wallet');
@@ -165,14 +184,22 @@ const PayoutsPage: React.FC = () => {
         subtitle="Manage your BZY earnings and withdraw funds"
       />
 
-      <Button
-        variant="secondary"
-        size="sm"
-        onClick={() => navigate(-1)}
-        style={{ marginBottom: theme.spacing.lg }}
-      >
-        ← Back
-      </Button>
+      <div style={{ display: 'flex', gap: theme.spacing.md, marginBottom: theme.spacing.lg }}>
+        <Button
+          variant="secondary"
+          size="sm"
+          onClick={() => navigate(-1)}
+        >
+          ← Back
+        </Button>
+        <Button
+          variant="primary"
+          onClick={handleStartEarning}
+          style={{ flex: 1 }}
+        >
+          🚀 Start Earning Now
+        </Button>
+      </div>
 
       {/* Wallet Balance Cards */}
       <div style={{
@@ -200,6 +227,334 @@ const PayoutsPage: React.FC = () => {
           </p>
         </Card>
       </div>
+
+      {/* Start Earning Now Modal */}
+      {showEarningModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.7)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000,
+          padding: theme.spacing.lg,
+        }}>
+          <Card style={{
+            maxWidth: '600px',
+            width: '100%',
+            padding: theme.spacing.xl,
+            maxHeight: '90vh',
+            overflowY: 'auto',
+          }}>
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              marginBottom: theme.spacing.lg,
+            }}>
+              <h2 style={{ margin: 0, color: theme.colors.text.primary }}>
+                🚀 Start Earning BZY
+              </h2>
+              <button
+                onClick={handleCloseEarningModal}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  fontSize: '24px',
+                  cursor: 'pointer',
+                  color: theme.colors.text.secondary,
+                }}
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Step Indicator */}
+            <div style={{
+              display: 'flex',
+              gap: theme.spacing.md,
+              marginBottom: theme.spacing.xl,
+              justifyContent: 'space-between',
+            }}>
+              {[1, 2, 3].map((step) => (
+                <div key={step} style={{ flex: 1, textAlign: 'center' }}>
+                  <div style={{
+                    width: '40px',
+                    height: '40px',
+                    borderRadius: '50%',
+                    backgroundColor: earningStep >= step ? theme.colors.accent : theme.colors.gray[800],
+                    color: earningStep >= step ? theme.colors.background.primary : theme.colors.text.secondary,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontWeight: 'bold',
+                    margin: '0 auto 8px',
+                  }}>
+                    {step}
+                  </div>
+                  <p style={{
+                    margin: 0,
+                    fontSize: theme.typography.fontSize.sm,
+                    color: earningStep >= step ? theme.colors.text.primary : theme.colors.text.secondary,
+                  }}>
+                    {step === 1 ? 'Connect Wallet' : step === 2 ? 'Music Feed' : 'Start Streaming'}
+                  </p>
+                </div>
+              ))}
+            </div>
+
+            {/* Step 1: Connect Wallet */}
+            {earningStep === 1 && (
+              <div style={{
+                padding: theme.spacing.lg,
+                backgroundColor: theme.colors.background.tertiary,
+                borderRadius: theme.borderRadius.md,
+                marginBottom: theme.spacing.lg,
+              }}>
+                <h3 style={{ margin: 0, marginBottom: theme.spacing.md, color: theme.colors.accent }}>
+                  🔐 Step 1: Connect Your Wallet
+                </h3>
+                <p style={{
+                  margin: 0,
+                  marginBottom: theme.spacing.lg,
+                  color: theme.colors.text.secondary,
+                  lineHeight: '1.6',
+                }}>
+                  Create a secure embedded wallet using magic link authentication. No passwords needed - just your email!
+                </p>
+
+                <div style={{
+                  padding: theme.spacing.md,
+                  backgroundColor: theme.colors.background.secondary,
+                  borderRadius: theme.borderRadius.md,
+                  marginBottom: theme.spacing.lg,
+                }}>
+                  <p style={{
+                    margin: 0,
+                    marginBottom: theme.spacing.sm,
+                    color: theme.colors.text.secondary,
+                    fontSize: theme.typography.fontSize.sm,
+                  }}>
+                    ✅ Your wallet will receive BZY instantly<br />
+                    ✅ No gas fees or hidden charges<br />
+                    ✅ Secure and verifiable on-chain
+                  </p>
+                </div>
+
+                <label style={{
+                  display: 'block',
+                  marginBottom: theme.spacing.sm,
+                  color: theme.colors.text.secondary,
+                  fontSize: theme.typography.fontSize.sm,
+                  fontWeight: 600,
+                }}>
+                  Email Address *
+                </label>
+                <input
+                  type="email"
+                  value={magicLinkEmail}
+                  onChange={(e) => setMagicLinkEmail(e.target.value)}
+                  placeholder="your.email@example.com"
+                  style={{
+                    width: '100%',
+                    padding: theme.spacing.md,
+                    borderRadius: theme.borderRadius.md,
+                    border: `1px solid ${theme.colors.gray[700]}`,
+                    backgroundColor: theme.colors.background.secondary,
+                    color: theme.colors.text.primary,
+                    fontSize: theme.typography.fontSize.base,
+                    boxSizing: 'border-box',
+                    marginBottom: theme.spacing.lg,
+                  }}
+                />
+
+                {!magicLinkSent ? (
+                  <Button
+                    variant="primary"
+                    onClick={handleSendMagicLink}
+                    style={{ width: '100%' }}
+                  >
+                    📧 Send Magic Link
+                  </Button>
+                ) : (
+                  <div style={{
+                    padding: theme.spacing.md,
+                    backgroundColor: theme.colors.success,
+                    borderRadius: theme.borderRadius.md,
+                    color: 'white',
+                    marginBottom: theme.spacing.md,
+                  }}>
+                    <p style={{ margin: 0, fontWeight: 600, marginBottom: theme.spacing.xs }}>
+                      ✅ Magic link sent!
+                    </p>
+                    <p style={{ margin: 0, fontSize: theme.typography.fontSize.sm }}>
+                      Check your email to verify
+                    </p>
+                  </div>
+                )}
+
+                {magicLinkSent && (
+                  <Button
+                    variant="primary"
+                    onClick={handleVerifyAndConnectWallet}
+                    style={{ width: '100%' }}
+                  >
+                    ✓ Confirm Wallet Connection
+                  </Button>
+                )}
+              </div>
+            )}
+
+            {/* Step 2: Music Feed */}
+            {earningStep === 2 && (
+              <div style={{
+                padding: theme.spacing.lg,
+                backgroundColor: theme.colors.background.tertiary,
+                borderRadius: theme.borderRadius.md,
+                marginBottom: theme.spacing.lg,
+              }}>
+                <h3 style={{ margin: 0, marginBottom: theme.spacing.md, color: theme.colors.accent }}>
+                  🎵 Step 2: Browse the Music Feed
+                </h3>
+                <p style={{
+                  margin: 0,
+                  marginBottom: theme.spacing.lg,
+                  color: theme.colors.text.secondary,
+                  lineHeight: '1.6',
+                }}>
+                  Head over to our Music Feed and discover thousands of tracks. Filter by genre to find what you love.
+                </p>
+
+                <div style={{
+                  padding: theme.spacing.md,
+                  backgroundColor: theme.colors.background.secondary,
+                  borderRadius: theme.borderRadius.md,
+                  marginBottom: theme.spacing.lg,
+                }}>
+                  <p style={{
+                    margin: 0,
+                    marginBottom: theme.spacing.sm,
+                    color: theme.colors.text.secondary,
+                    fontSize: theme.typography.fontSize.sm,
+                  }}>
+                    💡 Tips:<br />
+                    • Browse by genre (Pop, Rock, Electronic, etc.)<br />
+                    • Check your favorite artists<br />
+                    • Discover new music while earning
+                  </p>
+                </div>
+
+                <Button
+                  variant="primary"
+                  onClick={handleGoToFeed}
+                  style={{ width: '100%' }}
+                >
+                  🎵 Go to Music Feed
+                </Button>
+              </div>
+            )}
+
+            {/* Step 3: Start Streaming */}
+            {earningStep === 3 && (
+              <div style={{
+                padding: theme.spacing.lg,
+                backgroundColor: theme.colors.background.tertiary,
+                borderRadius: theme.borderRadius.md,
+                marginBottom: theme.spacing.lg,
+              }}>
+                <h3 style={{ margin: 0, marginBottom: theme.spacing.md, color: theme.colors.accent }}>
+                  ▶️ Step 3: Start Streaming & Earn
+                </h3>
+                <p style={{
+                  margin: 0,
+                  marginBottom: theme.spacing.lg,
+                  color: theme.colors.text.secondary,
+                  lineHeight: '1.6',
+                }}>
+                  Click play on any track and start earning BZY in real-time. Watch the counter grow with every second!
+                </p>
+
+                <div style={{
+                  padding: theme.spacing.md,
+                  backgroundColor: theme.colors.background.secondary,
+                  borderRadius: theme.borderRadius.md,
+                  marginBottom: theme.spacing.lg,
+                }}>
+                  <p style={{
+                    margin: 0,
+                    marginBottom: theme.spacing.sm,
+                    color: theme.colors.accent,
+                    fontSize: theme.typography.fontSize.sm,
+                    fontWeight: 600,
+                  }}>
+                    🎯 Earning Rates:<br />
+                    • Each track has its own earning rate<br />
+                    • Earnings update every second<br />
+                    • Your BZY transfers instantly to your wallet
+                  </p>
+                </div>
+
+                <div style={{
+                  padding: theme.spacing.md,
+                  backgroundColor: theme.colors.info,
+                  borderRadius: theme.borderRadius.md,
+                  color: 'white',
+                  marginBottom: theme.spacing.lg,
+                }}>
+                  <p style={{ margin: 0, fontWeight: 600 }}>
+                    💰 You're all set!
+                  </p>
+                  <p style={{ margin: 0, marginTop: theme.spacing.xs, fontSize: theme.typography.fontSize.sm }}>
+                    Your wallet is connected and ready to receive earnings
+                  </p>
+                </div>
+
+                <Button
+                  variant="primary"
+                  onClick={handleGoToFeed}
+                  style={{ width: '100%', marginBottom: theme.spacing.md }}
+                >
+                  🚀 Start Streaming Now
+                </Button>
+
+                <Button
+                  variant="secondary"
+                  onClick={handleCloseEarningModal}
+                  style={{ width: '100%' }}
+                >
+                  Close
+                </Button>
+              </div>
+            )}
+
+            {/* Navigation Buttons */}
+            {earningStep < 3 && earningStep !== 1 && (
+              <div style={{ display: 'flex', gap: theme.spacing.md }}>
+                <Button
+                  variant="secondary"
+                  onClick={() => setEarningStep(Math.max(1, earningStep - 1))}
+                  style={{ flex: 1 }}
+                >
+                  ← Back
+                </Button>
+                {earningStep === 2 && (
+                  <Button
+                    variant="primary"
+                    onClick={() => setEarningStep(3)}
+                    style={{ flex: 1 }}
+                  >
+                    Next →
+                  </Button>
+                )}
+              </div>
+            )}
+          </Card>
+        </div>
+      )}
 
       {/* Privy Wallet Connection */}
       {!walletConnected ? (
