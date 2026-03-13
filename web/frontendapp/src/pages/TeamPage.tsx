@@ -53,6 +53,22 @@ const TeamPage: React.FC = () => {
       description: 'Connect your Meta Ads account to import campaign data and audience insights',
     },
     {
+      id: 'tiktok_api',
+      name: 'TikTok Ads API',
+      type: 'custom',
+      status: 'disconnected',
+      icon: '🎵',
+      description: 'Access TikTok campaign performance, audience demographics, and viral content insights for music promotion',
+    },
+    {
+      id: 'snapchat_api',
+      name: 'Snapchat Ads API',
+      type: 'custom',
+      status: 'disconnected',
+      icon: '👻',
+      description: 'Connect Snapchat ads to track youth audience engagement and music discovery campaigns',
+    },
+    {
       id: 'google_analytics',
       name: 'Google Analytics 4',
       type: 'google_analytics',
@@ -497,6 +513,28 @@ const TeamPage: React.FC = () => {
                   ✓
                 </Badge>
               </div>
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: theme.spacing.md }}>
+                <span style={{ fontSize: '18px' }}>🎵</span>
+                <div style={{ flex: 1 }}>
+                  <p style={{ margin: 0, color: theme.colors.text.primary, fontWeight: '600' }}>TikTok Ads API</p>
+                  <p style={{ margin: 0, fontSize: theme.typography.fontSize.sm, color: theme.colors.text.secondary }}>Campaign performance, viral content metrics, youth audience insights</p>
+                </div>
+                <Badge variant={integrations.find(i => i.id === 'tiktok_api')?.status === 'connected' ? 'success' : 'info'} size="sm">
+                  {integrations.find(i => i.id === 'tiktok_api')?.status === 'connected' ? '✓' : '⊘'}
+                </Badge>
+              </div>
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: theme.spacing.md }}>
+                <span style={{ fontSize: '18px' }}>👻</span>
+                <div style={{ flex: 1 }}>
+                  <p style={{ margin: 0, color: theme.colors.text.primary, fontWeight: '600' }}>Snapchat Ads API</p>
+                  <p style={{ margin: 0, fontSize: theme.typography.fontSize.sm, color: theme.colors.text.secondary }}>Youth audience engagement, discovery campaigns, Gen Z metrics</p>
+                </div>
+                <Badge variant={integrations.find(i => i.id === 'snapchat_api')?.status === 'connected' ? 'success' : 'info'} size="sm">
+                  {integrations.find(i => i.id === 'snapchat_api')?.status === 'connected' ? '✓' : '⊘'}
+                </Badge>
+              </div>
             </div>
           </Card>
         </div>
@@ -707,6 +745,70 @@ const TeamPage: React.FC = () => {
                 <input
                   type="password"
                   placeholder="Paste your Claude API key (sk-ant-...)"
+                  style={{
+                    padding: theme.spacing.sm,
+                    borderRadius: theme.borderRadius.md,
+                    border: `1px solid ${theme.colors.gray[700]}`,
+                    backgroundColor: theme.colors.background.secondary,
+                    color: theme.colors.text.primary,
+                    fontSize: theme.typography.fontSize.base,
+                    boxSizing: 'border-box',
+                  }}
+                  onKeyPress={(e) => {
+                    if (e.key === 'Enter') {
+                      handleSaveApiKey((e.target as HTMLInputElement).value);
+                    }
+                  }}
+                />
+              </div>
+            )}
+
+            {selectedIntegration?.id === 'tiktok_api' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: theme.spacing.md }}>
+                <p style={{ margin: 0, color: theme.colors.text.secondary, fontSize: theme.typography.fontSize.sm }}>
+                  1. Go to <strong>TikTok for Business</strong> → Business Center → Apps
+                </p>
+                <p style={{ margin: 0, color: theme.colors.text.secondary, fontSize: theme.typography.fontSize.sm }}>
+                  2. Create or select your app and copy the <strong>Access Token</strong>
+                </p>
+                <p style={{ margin: 0, color: theme.colors.text.secondary, fontSize: theme.typography.fontSize.sm }}>
+                  3. Also copy your <strong>Advertiser ID</strong> (found in Business Center)
+                </p>
+                <input
+                  type="password"
+                  placeholder="Paste your TikTok Access Token"
+                  style={{
+                    padding: theme.spacing.sm,
+                    borderRadius: theme.borderRadius.md,
+                    border: `1px solid ${theme.colors.gray[700]}`,
+                    backgroundColor: theme.colors.background.secondary,
+                    color: theme.colors.text.primary,
+                    fontSize: theme.typography.fontSize.base,
+                    boxSizing: 'border-box',
+                  }}
+                  onKeyPress={(e) => {
+                    if (e.key === 'Enter') {
+                      handleSaveApiKey((e.target as HTMLInputElement).value);
+                    }
+                  }}
+                />
+              </div>
+            )}
+
+            {selectedIntegration?.id === 'snapchat_api' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: theme.spacing.md }}>
+                <p style={{ margin: 0, color: theme.colors.text.secondary, fontSize: theme.typography.fontSize.sm }}>
+                  1. Go to <strong>Snapchat Ads Manager</strong> → Settings → API & Tools
+                </p>
+                <p style={{ margin: 0, color: theme.colors.text.secondary, fontSize: theme.typography.fontSize.sm }}>
+                  2. Create an app and copy the <strong>Client ID</strong> and <strong>Client Secret</strong>
+                </p>
+                <p style={{ margin: 0, color: theme.colors.text.secondary, fontSize: theme.typography.fontSize.sm }}>
+                  3. Also note your <strong>Ad Account ID</strong> for youth audience targeting
+                </p>
+                <input
+                  type="password"
+                  placeholder="Paste your Snapchat Client ID:Client Secret"
                   style={{
                     padding: theme.spacing.sm,
                     borderRadius: theme.borderRadius.md,
