@@ -30,8 +30,16 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   useEffect(() => {
     const initializeAuth = async () => {
       try {
-        // Check if user has existing session
-        const { data: { session } } = await supabase.auth.getSession();
+        // Wrap getSession with timeout to prevent hanging
+        const sessionPromise = supabase.auth.getSession();
+        const timeoutPromise = new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('Session check timeout')), 2000)
+        );
+
+        const { data: { session } } = await Promise.race([
+          sessionPromise,
+          timeoutPromise,
+        ]) as any;
 
         if (session?.user) {
           // Use session data directly, don't fetch profile
@@ -60,6 +68,17 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         }
       } catch (error) {
         console.error('Failed to initialize auth:', error);
+        // Still load from localStorage if Supabase fails
+        const storedUser = localStorage.getItem('soundmoney_user');
+        if (storedUser) {
+          try {
+            const parsed = JSON.parse(storedUser);
+            setUser(parsed);
+            setIsAuthenticated(true);
+          } catch (e) {
+            console.error('Failed to parse stored user:', e);
+          }
+        }
       } finally {
         setIsLoading(false);
       }
