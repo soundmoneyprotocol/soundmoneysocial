@@ -3,6 +3,7 @@ import Card from './Card';
 import Button from './Button';
 import Badge from './Badge';
 import { theme } from '../theme/theme';
+import { useSubscription } from '../contexts/SubscriptionContext';
 
 interface SubscriptionModalProps {
   isOpen: boolean;
@@ -29,7 +30,9 @@ export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
   const [activeTab, setActiveTab] = useState<SubscriptionTab>('plans');
   const [referralCode, setReferralCode] = useState('REF-' + Math.random().toString(36).substr(2, 9).toUpperCase());
   const [teamEmail, setTeamEmail] = useState('');
-  const [currentPlan, setCurrentPlan] = useState('creator');
+  
+  const { tier, upgradePlan } = useSubscription();
+  const currentPlan = tier === 'free' ? 'free' : tier === 'pro' ? 'pro' : 'team';
 
   const plans: Plan[] = [
     {
@@ -97,7 +100,7 @@ export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
     }
     const planName = plans.find(p => p.id === planId)?.name;
     alert(`✅ Upgraded to ${planName}!`);
-    setCurrentPlan(planId);
+    upgradePlan(planId as any);
     
     // Navigate to Team page if upgrading to Team/Label plan
     if (planId === 'team' && onNavigateToTeam) {

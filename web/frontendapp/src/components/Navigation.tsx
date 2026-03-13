@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { useSubscription } from '../contexts/SubscriptionContext';
 import { theme } from '../theme/theme';
 import MonetizationModal from './MonetizationModal';
 import SubscriptionModal from './SubscriptionModal';
@@ -28,6 +29,7 @@ const Navigation: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, logout } = useAuth();
+  const { tier, isTeamPlan } = useSubscription();
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const [showMonetizationModal, setShowMonetizationModal] = useState(false);
   const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
@@ -54,7 +56,12 @@ const Navigation: React.FC = () => {
       label: 'Subscription',
       icon: '💎',
       action: () => {
-        setShowSubscriptionModal(true);
+        // Auto-navigate Team plan users directly to Team page
+        if (isTeamPlan) {
+          navigate('/team');
+        } else {
+          setShowSubscriptionModal(true);
+        }
         setShowProfileDropdown(false);
       },
     },

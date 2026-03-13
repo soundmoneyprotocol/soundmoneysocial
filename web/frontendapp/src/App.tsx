@@ -7,6 +7,7 @@ import {
   Navigate,
 } from "react-router-dom";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
+import { SubscriptionProvider } from "./contexts/SubscriptionContext";
 import Navigation from "./components/Navigation";
 import { Loading } from "./components";
 import AuthPage from "./pages/AuthPage";
@@ -117,9 +118,11 @@ function AppContent() {
 
 function App() {
   return (
-    <AuthProvider>
-      <AppContent />
-    </AuthProvider>
+    <SubscriptionProvider>
+      <AuthProvider>
+        <AppContent />
+      </AuthProvider>
+    </SubscriptionProvider>
   );
 }
 

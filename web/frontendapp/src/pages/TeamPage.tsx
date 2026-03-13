@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Container, Header, Card, Button, Badge } from '../components';
 import { theme } from '../theme/theme';
+import { useSubscription } from '../contexts/SubscriptionContext';
 
 interface TeamMember {
   id: string;
@@ -26,6 +27,7 @@ interface ApiIntegration {
 type TabType = 'overview' | 'team' | 'integrations' | 'ai_enhancements' | 'api_keys';
 
 const TeamPage: React.FC = () => {
+  const { tier, bezyMultiplier, teamMembersLimit } = useSubscription();
   const [activeTab, setActiveTab] = useState<TabType>('overview');
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([
     {
@@ -186,13 +188,13 @@ const TeamPage: React.FC = () => {
           }}>
             <Card style={{ padding: theme.spacing.lg, textAlign: 'center' }}>
               <p style={{ margin: 0, marginBottom: theme.spacing.sm, color: theme.colors.text.secondary }}>
-                Team Members
+                Subscription Tier
               </p>
-              <p style={{ margin: 0, fontSize: '32px', fontWeight: 'bold', color: theme.colors.primary }}>
-                {teamMembers.length}
+              <p style={{ margin: 0, fontSize: '32px', fontWeight: 'bold', color: theme.colors.primary, textTransform: 'capitalize' }}>
+                {tier === 'free' ? 'Creator' : tier === 'pro' ? 'Pro' : 'Team/Label'}
               </p>
-              <p style={{ margin: 0, marginTop: '4px', color: theme.colors.text.secondary, fontSize: theme.typography.fontSize.sm }}>
-                Active team
+              <p style={{ margin: 0, marginTop: '4px', color: theme.colors.accent, fontSize: theme.typography.fontSize.sm, fontWeight: '600' }}>
+                {bezyMultiplier}x BZY Multiplier
               </p>
             </Card>
 
