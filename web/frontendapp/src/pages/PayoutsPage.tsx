@@ -3,6 +3,7 @@ import { Container, Header, Card, Button, Badge } from '../components';
 import { theme } from '../theme/theme';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import privyWalletService from '../services/privyWalletService';
 
 interface PayoutRecord {
   id: string;
@@ -45,6 +46,11 @@ const PayoutsPage: React.FC = () => {
       status: 'pending',
     },
   ]);
+
+  const [walletConnected, setWalletConnected] = useState(false);
+  const [magicLinkEmail, setMagicLinkEmail] = useState('');
+  const [showMagicLinkForm, setShowMagicLinkForm] = useState(false);
+  const [magicLinkSent, setMagicLinkSent] = useState(false);
 
   const [showPayoutForm, setShowPayoutForm] = useState(false);
   const [payoutForm, setPayoutForm] = useState({
@@ -114,6 +120,44 @@ const PayoutsPage: React.FC = () => {
     color: 'white',
   });
 
+
+  const handleSendMagicLink = async () => {
+    if (!magicLinkEmail) {
+      alert('Please enter your email');
+      return;
+    }
+
+    try {
+      const result = await privyWalletService.sendMagicLink(magicLinkEmail);
+      if (result.success) {
+        setMagicLinkSent(true);
+        localStorage.setItem('user_email', magicLinkEmail);
+        alert('✅ ' + result.message);
+      }
+    } catch (error) {
+      alert('❌ Error sending magic link');
+    }
+  };
+
+  const handleVerifyAndConnectWallet = async () => {
+    try {
+      const wallet = await privyWalletService.linkEmailToWallet(magicLinkEmail);
+      if (wallet) {
+        setWalletConnected(true);
+        setWalletData(prev => ({
+          ...prev,
+          walletAddress: wallet.walletAddress,
+        }));
+        localStorage.setItem('wallet_address', wallet.walletAddress);
+        localStorage.setItem('privy_wallet_id', wallet.id);
+        setShowMagicLinkForm(false);
+        alert('✅ Wallet connected successfully!');
+      }
+    } catch (error) {
+      alert('❌ Error connecting wallet');
+    }
+  };
+
   return (
     <Container maxWidth="lg" padding="lg">
       <Header
@@ -156,6 +200,183 @@ const PayoutsPage: React.FC = () => {
           </p>
         </Card>
       </div>
+
+      {/* Privy Wallet Connection */}
+      {!walletConnected ? (
+        <Card style={{ padding: theme.spacing.lg, marginBottom: theme.spacing.lg, borderLeft: `4px solid ${theme.colors.primary}` }}>
+          <h3 style={{ margin: 0, marginBottom: theme.spacing.lg, color: theme.colors.text.primary }}>
+            🔐 Connect Wallet with Privy
+          </h3>
+
+          {!showMagicLinkForm ? (
+            <div>
+              <p style={{ margin: 0, marginBottom: theme.spacing.lg, color: theme.colors.text.secondary }}>
+                Connect your wallet securely using magic link authentication. No passwords needed!
+              </p>
+              <Button
+                variant="primary"
+                onClick={() => setShowMagicLinkForm(true)}
+                style={{ width: '100%' }}
+              >
+                🔗 Connect via Magic Link
+              </Button>
+            </div>
+          ) : (
+            <div style={{
+              padding: theme.spacing.lg,
+              backgroundColor: theme.colors.background.tertiary,
+              borderRadius: theme.borderRadius.md,
+            }}>
+              <label style={{
+                display: 'block',
+                marginBottom: theme.spacing.sm,
+                color: theme.colors.text.secondary,
+                fontSize: theme.typography.fontSize.sm,
+                fontWeight: 600,
+              }}>
+                Email Address *
+              </label>
+              <input
+                type="email"
+                value={magicLinkEmail}
+                onChange={(e) => setMagicLinkEmail(e.target.value)}
+                placeholder="your.email@example.com"
+                style={{
+                  width: '100%',
+                  padding: theme.spacing.md,
+                  borderRadius: theme.borderRadius.md,
+                  border: `1px solid ${theme.colors.gray[700]}`,
+                  backgroundColor: theme.colors.background.secondary,
+                  color: theme.colors.text.primary,
+                  fontSize: theme.typography.fontSize.base,
+                  boxSizing: 'border-box',
+                  marginBottom: theme.spacing.md,
+                }}
+              />
+
+              <p style={{
+                margin: 0,
+                marginBottom: theme.spacing.md,
+                color: theme.colors.text.secondary,
+                fontSize: theme.typography.fontSize.sm,
+              }}>
+                💡 We'll send a secure magic link to your email to create and connect your embedded wallet.
+              </p>
+
+              <div style={{ display: 'flex', gap: theme.spacing.md }}>
+                <Button
+                  variant="secondary"
+                  onClick={() => {
+                    setShowMagicLinkForm(false);
+                    setMagicLinkSent(false);
+                  }}
+                  style={{ flex: 1 }}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant="primary"
+                  onClick={handleSendMagicLink}
+                  style={{ flex: 1 }}
+                >
+                  📧 Send Magic Link
+                </Button>
+              </div>
+
+              {magicLinkSent && (
+                <div style={{
+                  marginTop: theme.spacing.lg,
+                  padding: theme.spacing.md,
+                  backgroundColor: theme.colors.success,
+                  borderRadius: theme.borderRadius.md,
+                  color: 'white',
+                }}>
+                  <p style={{ margin: 0, fontWeight: 600 }}>
+                    ✅ Magic link sent to {magicLinkEmail}
+                  </p>
+                  <p style={{ margin: 0, marginTop: theme.spacing.xs, fontSize: theme.typography.fontSize.sm }}>
+                    Click the link in your email to verify and connect your wallet
+                  </p>
+                  <Button
+                    variant="primary"
+                    onClick={handleVerifyAndConnectWallet}
+                    style={{ marginTop: theme.spacing.md, width: '100%' }}
+                  >
+                    ✓ Confirm Wallet Connection
+                  </Button>
+                </div>
+              )}
+            </div>
+          )}
+        </Card>
+      ) : (
+        <Card style={{ padding: theme.spacing.lg, marginBottom: theme.spacing.lg, borderLeft: `4px solid ${theme.colors.success}` }}>
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            marginBottom: theme.spacing.lg,
+          }}>
+            <h3 style={{ margin: 0, color: theme.colors.success }}>
+              ✅ Wallet Connected
+            </h3>
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => {
+                setWalletConnected(false);
+                setMagicLinkEmail('');
+                setMagicLinkSent(false);
+              }}
+            >
+              🔄 Disconnect
+            </Button>
+          </div>
+
+          <div style={{
+            padding: theme.spacing.md,
+            backgroundColor: theme.colors.background.tertiary,
+            borderRadius: theme.borderRadius.md,
+            marginBottom: theme.spacing.lg,
+          }}>
+            <p style={{
+              margin: 0,
+              marginBottom: theme.spacing.sm,
+              color: theme.colors.text.secondary,
+              fontSize: theme.typography.fontSize.sm,
+            }}>
+              Connected Email
+            </p>
+            <p style={{
+              margin: 0,
+              color: theme.colors.text.primary,
+              fontWeight: 600,
+              marginBottom: theme.spacing.lg,
+            }}>
+              {magicLinkEmail}
+            </p>
+
+            <p style={{
+              margin: 0,
+              marginBottom: theme.spacing.sm,
+              color: theme.colors.text.secondary,
+              fontSize: theme.typography.fontSize.sm,
+            }}>
+              Privy Embedded Wallet
+            </p>
+            <p style={{
+              margin: 0,
+              color: theme.colors.primary,
+              fontWeight: 600,
+              fontFamily: 'monospace',
+              fontSize: theme.typography.fontSize.sm,
+              wordBreak: 'break-all',
+            }}>
+              {walletData.walletAddress}
+            </p>
+          </div>
+        </Card>
+      )}
 
       {/* Wallet Address Section */}
       <Card style={{ padding: theme.spacing.lg, marginBottom: theme.spacing.lg }}>
