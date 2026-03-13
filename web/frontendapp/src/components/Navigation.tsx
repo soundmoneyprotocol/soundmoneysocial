@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { theme } from '../theme/theme';
 import MonetizationModal from './MonetizationModal';
+import SubscriptionModal from './SubscriptionModal';
 
 interface NavItem {
   label: string;
@@ -29,6 +30,7 @@ const Navigation: React.FC = () => {
   const { user, logout } = useAuth();
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const [showMonetizationModal, setShowMonetizationModal] = useState(false);
+  const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
 
   const handleLogout = async () => {
     try {
@@ -45,6 +47,14 @@ const Navigation: React.FC = () => {
       icon: '👤',
       action: () => {
         navigate('/profile');
+        setShowProfileDropdown(false);
+      },
+    },
+    {
+      label: 'Subscription',
+      icon: '💎',
+      action: () => {
+        setShowSubscriptionModal(true);
         setShowProfileDropdown(false);
       },
     },
@@ -319,6 +329,12 @@ const Navigation: React.FC = () => {
       <MonetizationModal
         isOpen={showMonetizationModal}
         onClose={() => setShowMonetizationModal(false)}
+      />
+
+      {/* Subscription Modal */}
+      <SubscriptionModal
+        isOpen={showSubscriptionModal}
+        onClose={() => setShowSubscriptionModal(false)}
       />
     </>
   );

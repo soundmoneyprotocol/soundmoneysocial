@@ -21,6 +21,7 @@ import PayoutsPage from "./pages/PayoutsPage";
 import PrivacyPage from "./pages/PrivacyPage";
 import ReferralsPage from "./pages/ReferralsPage";
 import TicketsPage from "./pages/TicketsPage";
+import TeamPage from "./pages/TeamPage";
 
 // Page metadata
 const pageMetadata: { [key: string]: { title: string; description: string } } = {
@@ -103,6 +104,7 @@ function AppContent() {
         <Route path="/privacy" element={<PrivacyPage />} />
         <Route path="/referrals" element={<ReferralsPage />} />
         <Route path="/tickets" element={<TicketsPage />} />
+        <Route path="/team" element={<TeamPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </>

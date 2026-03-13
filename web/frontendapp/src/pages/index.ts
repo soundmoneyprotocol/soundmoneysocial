@@ -10,3 +10,4 @@ export { default as PayoutsPage } from './PayoutsPage';
 export { default as PrivacyPage } from './PrivacyPage';
 export { default as ReferralsPage } from './ReferralsPage';
 export { default as TicketsPage } from './TicketsPage';
+export { default as TeamPage } from './TeamPage';
