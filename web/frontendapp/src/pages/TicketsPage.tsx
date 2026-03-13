@@ -44,9 +44,32 @@ interface TicketingIntegration {
   connectionUrl?: string;
 }
 
+interface MerchIntegration {
+  id: string;
+  name: string;
+  description: string;
+  icon: string;
+  connected: boolean;
+  features: string[];
+  connectionUrl?: string;
+}
+
+interface MerchProduct {
+  id: string;
+  name: string;
+  description: string;
+  price: number;
+  platform: string;
+  imageUrl?: string;
+  inventory: number;
+  status: 'active' | 'draft' | 'archived';
+  createdAt: string;
+}
+
+
 const TicketsPage: React.FC = () => {
   const navigate = useNavigate();
-  const [selectedTab, setSelectedTab] = useState<'upcoming' | 'recommended' | 'owned' | 'integrations'>('upcoming');
+  const [selectedTab, setSelectedTab] = useState<'upcoming' | 'recommended' | 'owned' | 'integrations' | 'merch'>('upcoming');
   const [showCheckoutModal, setShowCheckoutModal] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [ticketQuantity, setTicketQuantity] = useState(1);
@@ -59,6 +82,16 @@ const TicketsPage: React.FC = () => {
     futureticketing: false,
   });
   const [showIntegrationModal, setShowIntegrationModal] = useState<string | null>(null);
+
+  const [merchProducts, setMerchProducts] = useState<MerchProduct[]>([]);
+  const [merchIntegrationStatuses, setMerchIntegrationStatuses] = useState<Record<string, boolean>>({
+    teespring: false,
+    shopify: false,
+    printify: false,
+    paypal: false,
+    zapier: false,
+  });
+  const [showCreateMerchModal, setShowCreateMerchModal] = useState(false);
 
   const ticketingIntegrations: TicketingIntegration[] = [
     {
@@ -239,6 +272,85 @@ const TicketsPage: React.FC = () => {
   ];
 
   const allEvents = [...recommendedEvents, ...upcomingEvents];
+
+  const merchIntegrations: MerchIntegration[] = [
+    {
+      id: 'teespring',
+      name: 'Spring (Teespring)',
+      description: 'Print-on-demand merchandise with global fulfillment for music artists.',
+      icon: '👕',
+      connected: merchIntegrationStatuses.teespring,
+      features: [
+        'Print-on-demand products',
+        'Global fulfillment',
+        'Custom branding',
+        'Automated royalties',
+        'Multi-variant products',
+      ],
+      connectionUrl: 'https://api.teespring.com/docs',
+    },
+    {
+      id: 'shopify',
+      name: 'Shopify',
+      description: 'Full-featured ecommerce platform for merchandise sales and direct-to-fan commerce.',
+      icon: '🛍️',
+      connected: merchIntegrationStatuses.shopify,
+      features: [
+        'Full ecommerce store',
+        'Inventory management',
+        'Payment processing',
+        'Shipping integration',
+        'Analytics dashboard',
+      ],
+      connectionUrl: 'https://www.shopify.com/developers/api',
+    },
+    {
+      id: 'printify',
+      name: 'Printify',
+      description: 'Multi-supplier print-on-demand platform for apparel, accessories, and more.',
+      icon: '🖨️',
+      connected: merchIntegrationStatuses.printify,
+      features: [
+        'Multiple print suppliers',
+        'Mockup generator',
+        'Auto-fulfillment',
+        'Quality control',
+        'Real-time inventory',
+      ],
+      connectionUrl: 'https://printify.com/printify-api/',
+    },
+    {
+      id: 'paypal',
+      name: 'PayPal',
+      description: 'Payment processing and checkout integration for merchandise sales.',
+      icon: '💳',
+      connected: merchIntegrationStatuses.paypal,
+      features: [
+        'Payment processing',
+        'Instant payouts',
+        'Fraud protection',
+        'Multiple currencies',
+        'Invoicing tools',
+      ],
+      connectionUrl: 'https://developer.paypal.com/',
+    },
+    {
+      id: 'zapier',
+      name: 'Zapier',
+      description: 'Automation platform to connect merchandise platforms with other business tools.',
+      icon: '⚡',
+      connected: merchIntegrationStatuses.zapier,
+      features: [
+        'Multi-platform automation',
+        'Order notifications',
+        'CRM integration',
+        'Email marketing sync',
+        '5000+ app integrations',
+      ],
+      connectionUrl: 'https://zapier.com/developer',
+    },
+  ];
+
   const filteredEvents = allEvents.filter(event => {
     const matchesTab = event.category === selectedTab || (selectedTab === 'recommended' && event.category === 'recommended');
     const matchesSearch = event.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -461,6 +573,22 @@ const TicketsPage: React.FC = () => {
           }}
         >
           🔌 Integrations
+        </button>
+        <button
+          onClick={() => setSelectedTab('merch')}
+          style={{
+            padding: `${theme.spacing.sm} ${theme.spacing.md}`,
+            backgroundColor: selectedTab === 'merch' ? theme.colors.primary : 'transparent',
+            color: selectedTab === 'merch' ? 'white' : theme.colors.text.secondary,
+            border: 'none',
+            borderRadius: theme.borderRadius.md,
+            cursor: 'pointer',
+            fontWeight: 600,
+            fontSize: theme.typography.fontSize.base,
+            transition: 'all 0.2s ease',
+          }}
+        >
+          👕 Merch
         </button>
       </div>
 
@@ -813,6 +941,141 @@ const TicketsPage: React.FC = () => {
               </Card>
             ))}
           </div>
+        </div>
+      )}
+
+      {/* Merch Tab */}
+      {selectedTab === 'merch' && (
+        <div>
+          <div style={{ marginBottom: theme.spacing.lg }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: theme.spacing.md }}>
+              <div>
+                <h3 style={{ margin: 0, marginBottom: theme.spacing.xs, color: theme.colors.text.primary }}>
+                  👕 Merchandise Management
+                </h3>
+                <p style={{ margin: 0, color: theme.colors.text.secondary, fontSize: theme.typography.fontSize.sm }}>
+                  Connect merchandise platforms to create and sell branded products
+                </p>
+              </div>
+              <button
+                onClick={() => setShowCreateMerchModal(true)}
+                style={{
+                  padding: `${theme.spacing.sm} ${theme.spacing.md}`,
+                  backgroundColor: theme.colors.accent,
+                  color: '#000',
+                  border: 'none',
+                  borderRadius: theme.borderRadius.md,
+                  cursor: 'pointer',
+                  fontWeight: 600,
+                  fontSize: theme.typography.fontSize.sm,
+                }}
+              >
+                ➕ Create Merch Product
+              </button>
+            </div>
+          </div>
+
+          {/* Merchandise Integrations */}
+          <div style={{ marginBottom: theme.spacing.lg }}>
+            <h4 style={{ margin: '0 0 12px 0', color: theme.colors.text.primary }}>
+              🔌 Available Integrations
+            </h4>
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
+              gap: theme.spacing.md,
+            }}>
+              {merchIntegrations.map((integration) => (
+                <Card key={integration.id} style={{ padding: theme.spacing.md }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: theme.spacing.md }}>
+                    <div style={{ fontSize: '32px' }}>{integration.icon}</div>
+                    <Badge variant={integration.connected ? 'success' : 'default'} size="sm">
+                      {integration.connected ? '✓ Connected' : '◯ Not Connected'}
+                    </Badge>
+                  </div>
+                  <h4 style={{ margin: '0 0 8px 0', color: theme.colors.text.primary, fontSize: theme.typography.fontSize.base }}>
+                    {integration.name}
+                  </h4>
+                  <p style={{ margin: '0 0 12px 0', color: theme.colors.text.secondary, fontSize: theme.typography.fontSize.sm }}>
+                    {integration.description}
+                  </p>
+                  <ul style={{ margin: 0, paddingLeft: '20px', listStyleType: 'disc', marginBottom: theme.spacing.md }}>
+                    {integration.features.slice(0, 3).map((feature, idx) => (
+                      <li key={idx} style={{ color: theme.colors.text.secondary, fontSize: theme.typography.fontSize.xs, marginBottom: '4px' }}>
+                        {feature}
+                      </li>
+                    ))}
+                  </ul>
+                  <Button
+                    variant={integration.connected ? 'secondary' : 'primary'}
+                    style={{ width: '100%', fontSize: theme.typography.fontSize.sm }}
+                  >
+                    {integration.connected ? '✓ Manage' : '🔗 Connect'}
+                  </Button>
+                </Card>
+              ))}
+            </div>
+          </div>
+
+          {/* Products List */}
+          {merchProducts.length > 0 && (
+            <div>
+              <h4 style={{ margin: '0 0 12px 0', color: theme.colors.text.primary }}>
+                📦 Your Merchandise Products
+              </h4>
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
+                gap: theme.spacing.md,
+              }}>
+                {merchProducts.map((product) => (
+                  <Card key={product.id} style={{ padding: theme.spacing.md }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: theme.spacing.md }}>
+                      <h4 style={{ margin: 0, color: theme.colors.text.primary, fontSize: theme.typography.fontSize.base }}>
+                        {product.name}
+                      </h4>
+                      <Badge variant={product.status === 'active' ? 'success' : 'default'} size="sm">
+                        {product.status.toUpperCase()}
+                      </Badge>
+                    </div>
+                    <p style={{ margin: '0 0 8px 0', color: theme.colors.text.secondary, fontSize: theme.typography.fontSize.sm }}>
+                      {product.description}
+                    </p>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: theme.spacing.md }}>
+                      <span style={{ color: theme.colors.accent, fontWeight: 600 }}>${product.price}</span>
+                      <span style={{ color: theme.colors.text.tertiary, fontSize: theme.typography.fontSize.sm }}>
+                        📦 {product.inventory} in stock
+                      </span>
+                    </div>
+                    <div style={{ display: 'flex', gap: theme.spacing.sm }}>
+                      <Button variant="secondary" style={{ flex: 1, fontSize: theme.typography.fontSize.xs }}>
+                        ✏️ Edit
+                      </Button>
+                      <Button variant="secondary" style={{ flex: 1, fontSize: theme.typography.fontSize.xs }}>
+                        📊 View Sales
+                      </Button>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {merchProducts.length === 0 && (
+            <div style={{
+              padding: theme.spacing.lg,
+              textAlign: 'center',
+              backgroundColor: theme.colors.background.secondary,
+              borderRadius: theme.borderRadius.md,
+              border: `1px dashed ${theme.colors.gray[800]}`,
+              color: theme.colors.text.secondary,
+            }}>
+              <p style={{ margin: 0, marginBottom: theme.spacing.sm }}>No merchandise products yet</p>
+              <p style={{ margin: 0, fontSize: theme.typography.fontSize.sm }}>
+                Connect a platform and create your first product to get started with merchandise sales
+              </p>
+            </div>
+          )}
         </div>
       )}
 
