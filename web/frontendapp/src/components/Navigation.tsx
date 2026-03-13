@@ -6,6 +6,7 @@ import { theme } from '../theme/theme';
 import MonetizationModal from './MonetizationModal';
 import SubscriptionModal from './SubscriptionModal';
 import ChatModal from './ChatModal';
+import CommunityManagerModal from './CommunityManagerModal';
 
 interface NavItem {
   label: string;
@@ -35,6 +36,7 @@ const Navigation: React.FC = () => {
   const [showMonetizationModal, setShowMonetizationModal] = useState(false);
   const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
   const [showChatModal, setShowChatModal] = useState(false);
+  const [showCommunityManagerModal, setShowCommunityManagerModal] = useState(false);
 
   const handleLogout = async () => {
     try {
@@ -59,6 +61,14 @@ const Navigation: React.FC = () => {
       icon: '💬',
       action: () => {
         setShowChatModal(true);
+        setShowProfileDropdown(false);
+      },
+    },
+    {
+      label: 'Community Manager',
+      icon: '🌐',
+      action: () => {
+        setShowCommunityManagerModal(true);
         setShowProfileDropdown(false);
       },
     },
@@ -344,6 +354,9 @@ const Navigation: React.FC = () => {
 
       {/* Chat Modal */}
       <ChatModal visible={showChatModal} onClose={() => setShowChatModal(false)} />
+
+      {/* Community Manager Modal */}
+      <CommunityManagerModal visible={showCommunityManagerModal} onClose={() => setShowCommunityManagerModal(false)} />
 
       {/* Monetization Modal */}
       <MonetizationModal
