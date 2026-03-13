@@ -3,6 +3,7 @@ import { Container, Header, Card, Button, Badge } from '../components';
 import { theme } from '../theme/theme';
 import { useNavigate } from 'react-router-dom';
 import { downloadAppleWalletPass, supportsAppleWallet } from '../utils/passKitGenerator';
+import { addToGoogleWallet, supportsGoogleWallet } from '../utils/googleWalletGenerator';
 
 interface Event {
   id: string;
@@ -284,6 +285,25 @@ const TicketsPage: React.FC = () => {
     }
 
     downloadAppleWalletPass({
+      ticketNumber: ticket.ticketNumber,
+      eventTitle: ticket.eventTitle,
+      artist: ticket.artist,
+      eventDate: ticket.date,
+      eventTime: '19:00',
+      venue: 'Event Venue',
+      location: 'San Francisco, CA',
+      price: ticket.price,
+      barcode: ticket.ticketNumber,
+    });
+  };
+
+  const handleAddToGoogleWallet = (ticket: OwnedTicket) => {
+    if (!supportsGoogleWallet()) {
+      alert('⚠️ Google Wallet is available on Android and iOS devices. Please try again from a compatible device.');
+      return;
+    }
+
+    addToGoogleWallet({
       ticketNumber: ticket.ticketNumber,
       eventTitle: ticket.eventTitle,
       artist: ticket.artist,
@@ -637,6 +657,17 @@ const TicketsPage: React.FC = () => {
                       title="Add to Apple Wallet (iOS/macOS)"
                     >
                       🍎 Wallet
+                    </Button>
+                    <Button 
+                      variant="secondary"
+                      onClick={() => handleAddToGoogleWallet(ticket)}
+                      style={{ 
+                        backgroundColor: '#4285F4',
+                        color: 'white',
+                      }}
+                      title="Add to Google Wallet (Android/iOS)"
+                    >
+                      🔵 Pay
                     </Button>
                     <Button variant="secondary">🎟️ Transfer</Button>
                   </div>
