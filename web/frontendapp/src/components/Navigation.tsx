@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { theme } from '../theme/theme';
+import MonetizationModal from './MonetizationModal';
 
 interface NavItem {
   label: string;
@@ -27,6 +28,7 @@ const Navigation: React.FC = () => {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
+  const [showMonetizationModal, setShowMonetizationModal] = useState(false);
 
   const handleLogout = async () => {
     try {
@@ -47,6 +49,14 @@ const Navigation: React.FC = () => {
       },
     },
     {
+      label: 'Monetization',
+      icon: '💰',
+      action: () => {
+        setShowMonetizationModal(true);
+        setShowProfileDropdown(false);
+      },
+    },
+    {
       label: 'Account Settings',
       icon: '⚙️',
       action: () => {
@@ -56,7 +66,7 @@ const Navigation: React.FC = () => {
     },
     {
       label: 'Wallet & Payouts',
-      icon: '💰',
+      icon: '💳',
       action: () => {
         navigate('/payouts');
         setShowProfileDropdown(false);
@@ -204,74 +214,25 @@ const Navigation: React.FC = () => {
   };
 
   return (
-    <nav style={navStyles}>
-      <div style={containerStyles}>
-        <div style={leftContainerStyles}>
-          <Link to="/" style={logoStyles}>
-            🎵 SoundMoney
-          </Link>
-          <ul style={navListStyles}>
-            {navItems.map((item) => {
-              const isActive = location.pathname === item.path;
-              return (
-                <li key={item.path}>
-                  <Link
-                    to={item.path}
-                    style={navItemStyles(isActive)}
-                    onMouseEnter={(e) => {
-                      if (!isActive) {
-                        e.currentTarget.style.backgroundColor = theme.colors.background.tertiary;
-                      }
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.backgroundColor = 'transparent';
-                    }}
-                  >
-                    <span>{item.icon}</span>
-                    <span>{item.label}</span>
-                  </Link>
-                </li>
-              );
-            })}
-          </ul>
-        </div>
-
-        <div style={rightContainerStyles}>
-          {user && (
-            <div style={{ position: 'relative' }}>
-              <button
-                style={profileButtonStyles}
-                onClick={() => setShowProfileDropdown(!showProfileDropdown)}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = theme.colors.background.tertiary;
-                  e.currentTarget.style.borderColor = theme.colors.primary;
-                  e.currentTarget.style.color = theme.colors.primary;
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = theme.colors.background.tertiary;
-                  e.currentTarget.style.borderColor = theme.colors.gray[700];
-                  e.currentTarget.style.color = theme.colors.text.primary;
-                }}
-              >
-                <span>👤</span>
-                <span>{user.username}</span>
-                <span style={{ fontSize: '12px', marginLeft: theme.spacing.xs }}>
-                  {showProfileDropdown ? '▲' : '▼'}
-                </span>
-              </button>
-
-              {showProfileDropdown && (
-                <div style={dropdownStyles}>
-                  {profileMenuItems.map((item, index) => (
-                    <div
-                      key={index}
-                      style={dropdownItemStyles(index === profileMenuItems.length - 1)}
-                      onClick={() => {
-                        item.action();
-                        setShowProfileDropdown(false);
-                      }}
+    <>
+      <nav style={navStyles}>
+        <div style={containerStyles}>
+          <div style={leftContainerStyles}>
+            <Link to="/" style={logoStyles}>
+              🎵 SoundMoney
+            </Link>
+            <ul style={navListStyles}>
+              {navItems.map((item) => {
+                const isActive = location.pathname === item.path;
+                return (
+                  <li key={item.path}>
+                    <Link
+                      to={item.path}
+                      style={navItemStyles(isActive)}
                       onMouseEnter={(e) => {
-                        Object.assign(e.currentTarget.style, dropdownItemHoverStyles);
+                        if (!isActive) {
+                          e.currentTarget.style.backgroundColor = theme.colors.background.tertiary;
+                        }
                       }}
                       onMouseLeave={(e) => {
                         e.currentTarget.style.backgroundColor = 'transparent';
@@ -279,30 +240,87 @@ const Navigation: React.FC = () => {
                     >
                       <span>{item.icon}</span>
                       <span>{item.label}</span>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-      </div>
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
 
-      {/* Close dropdown when clicking outside */}
-      {showProfileDropdown && (
-        <div
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            zIndex: 999,
-          }}
-          onClick={() => setShowProfileDropdown(false)}
-        />
-      )}
-    </nav>
+          <div style={rightContainerStyles}>
+            {user && (
+              <div style={{ position: 'relative' }}>
+                <button
+                  style={profileButtonStyles}
+                  onClick={() => setShowProfileDropdown(!showProfileDropdown)}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = theme.colors.background.tertiary;
+                    e.currentTarget.style.borderColor = theme.colors.primary;
+                    e.currentTarget.style.color = theme.colors.primary;
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = theme.colors.background.tertiary;
+                    e.currentTarget.style.borderColor = theme.colors.gray[700];
+                    e.currentTarget.style.color = theme.colors.text.primary;
+                  }}
+                >
+                  <span>👤</span>
+                  <span>{user.username}</span>
+                  <span style={{ fontSize: '12px', marginLeft: theme.spacing.xs }}>
+                    {showProfileDropdown ? '▲' : '▼'}
+                  </span>
+                </button>
+
+                {showProfileDropdown && (
+                  <div style={dropdownStyles}>
+                    {profileMenuItems.map((item, index) => (
+                      <div
+                        key={index}
+                        style={dropdownItemStyles(index === profileMenuItems.length - 1)}
+                        onClick={() => {
+                          item.action();
+                          setShowProfileDropdown(false);
+                        }}
+                        onMouseEnter={(e) => {
+                          Object.assign(e.currentTarget.style, dropdownItemHoverStyles);
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.backgroundColor = 'transparent';
+                        }}
+                      >
+                        <span>{item.icon}</span>
+                        <span>{item.label}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Close dropdown when clicking outside */}
+        {showProfileDropdown && (
+          <div
+            style={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              zIndex: 999,
+            }}
+            onClick={() => setShowProfileDropdown(false)}
+          />
+        )}
+      </nav>
+
+      {/* Monetization Modal */}
+      <MonetizationModal
+        isOpen={showMonetizationModal}
+        onClose={() => setShowMonetizationModal(false)}
+      />
+    </>
   );
 };
 
