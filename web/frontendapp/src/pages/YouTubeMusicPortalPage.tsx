@@ -256,7 +256,7 @@ const YouTubeMusicPortalPage: React.FC = () => {
   return (
     <Container maxWidth="lg" padding="lg">
       <Header
-        title="🎵 YouTube Music Portal"
+        title="🎵 Music Portal"
         subtitle="Manage your streaming track catalog"
       />
 

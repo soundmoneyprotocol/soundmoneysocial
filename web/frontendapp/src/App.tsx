@@ -37,7 +37,7 @@ const pageMetadata: { [key: string]: { title: string; description: string } } = 
     description: "Track your performance and engagement analytics",
   },
   "/music-portal": {
-    title: "YouTube Music Portal - SoundMoney",
+    title: "Music Portal - SoundMoney",
     description: "Manage your streaming track catalog and view earnings",
   },
   "/community": {
