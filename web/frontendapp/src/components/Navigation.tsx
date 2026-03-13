@@ -73,6 +73,14 @@ const Navigation: React.FC = () => {
       },
     },
     {
+      label: 'Artist Pro',
+      icon: '🎤',
+      action: () => {
+        navigate('/pro-artist');
+        setShowProfileDropdown(false);
+      },
+    },
+    {
       label: 'Subscription',
       icon: '💎',
       action: () => {

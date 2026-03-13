@@ -4,6 +4,7 @@ import Button from './Button';
 import Badge from './Badge';
 import { theme } from '../theme/theme';
 import { useSubscription } from '../contexts/SubscriptionContext';
+import { useNavigate } from 'react-router-dom';
 
 interface SubscriptionModalProps {
   isOpen: boolean;
@@ -32,6 +33,7 @@ export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
   const [teamEmail, setTeamEmail] = useState('');
   
   const { tier, upgradePlan } = useSubscription();
+  const navigate = useNavigate();
   const currentPlan = tier === 'free' ? 'free' : tier === 'pro' ? 'pro' : 'team';
 
   const plans: Plan[] = [
@@ -102,8 +104,13 @@ export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
     alert(`✅ Upgraded to ${planName}!`);
     upgradePlan(planId as any);
     
-    // Navigate to Team page if upgrading to Team/Label plan
-    if (planId === 'team' && onNavigateToTeam) {
+    // Navigate to appropriate page based on plan
+    if (planId === 'pro') {
+      setTimeout(() => {
+        onClose();
+        navigate('/pro-artist');
+      }, 500);
+    } else if (planId === 'team' && onNavigateToTeam) {
       setTimeout(() => {
         onClose();
         onNavigateToTeam();

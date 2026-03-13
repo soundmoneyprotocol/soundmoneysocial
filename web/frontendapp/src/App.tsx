@@ -23,6 +23,7 @@ import PrivacyPage from "./pages/PrivacyPage";
 import ReferralsPage from "./pages/ReferralsPage";
 import TicketsPage from "./pages/TicketsPage";
 import TeamPage from "./pages/TeamPage";
+import ProArtistPage from "./pages/ProArtistPage";
 
 // Page metadata
 const pageMetadata: { [key: string]: { title: string; description: string } } = {
@@ -45,6 +46,10 @@ const pageMetadata: { [key: string]: { title: string; description: string } } = 
   "/community": {
     title: "Community - SoundMoney Social",
     description: "Discover amazing creators and join the SoundMoney movement",
+  },
+  "/pro-artist": {
+    title: "Artist Pro - SoundMoney",
+    description: "Professional artist tools for music marketing and analytics",
   },
   "/team": {
     title: "Team Management - SoundMoney",
@@ -110,6 +115,7 @@ function AppContent() {
         <Route path="/referrals" element={<ReferralsPage />} />
         <Route path="/tickets" element={<TicketsPage />} />
         <Route path="/team" element={<TeamPage />} />
+        <Route path="/pro-artist" element={<ProArtistPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </>
