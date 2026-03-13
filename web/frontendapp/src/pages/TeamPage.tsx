@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Container, Header, Card, Button, Badge } from '../components';
 import { theme } from '../theme/theme';
+import EmbedWidget from '../components/EmbedWidget';
 import { useSubscription } from '../contexts/SubscriptionContext';
 
 interface TeamMember {
@@ -197,6 +198,78 @@ const TeamPage: React.FC = () => {
       {/* Overview Tab */}
       {activeTab === 'overview' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: theme.spacing.lg }}>
+
+          <Card style={{ padding: theme.spacing.lg }}>
+            <h3 style={{ margin: 0, marginBottom: theme.spacing.md, color: theme.colors.text.primary }}>
+              🎵 Stream BZY Counter Widget
+            </h3>
+            <p style={{ margin: 0, marginBottom: theme.spacing.md, color: theme.colors.text.secondary, fontSize: theme.typography.fontSize.sm }}>
+              Embed a real-time BZY counter on your website or blog. Perfect for artist portfolios and music promotion pages.
+            </p>
+
+            <div style={{ display: 'flex', gap: theme.spacing.lg, marginBottom: theme.spacing.lg, flexWrap: 'wrap' }}>
+              <div style={{ flex: '0 1 auto' }}>
+                <p style={{ margin: '0 0 12px 0', color: theme.colors.text.secondary, fontSize: theme.typography.fontSize.sm, fontWeight: '600' }}>
+                  Preview:
+                </p>
+                <EmbedWidget
+                  artistName="Your Artist"
+                  trackTitle="Your Track"
+                  spotifyUrl="https://open.spotify.com/track/..."
+                />
+              </div>
+
+              <div style={{ flex: '1', minWidth: '300px' }}>
+                <p style={{ margin: '0 0 12px 0', color: theme.colors.text.secondary, fontSize: theme.typography.fontSize.sm, fontWeight: '600' }}>
+                  Embed Code:
+                </p>
+                <pre style={{
+                  padding: theme.spacing.md,
+                  backgroundColor: theme.colors.background.primary,
+                  borderRadius: theme.borderRadius.md,
+                  overflow: 'auto',
+                  color: theme.colors.accent,
+                  fontSize: '11px',
+                  margin: 0,
+                  marginBottom: theme.spacing.md,
+                  fontFamily: 'monospace',
+                }}>
+{`<iframe
+  src="https://soundmoney.io/embed/widget?artist=YourArtist&track=YourTrack"
+  width="300"
+  height="400"
+  style="border: none; border-radius: 12px;"
+  allow="autoplay"
+></iframe>`}
+                </pre>
+
+                <button style={{
+                  padding: `${theme.spacing.md} ${theme.spacing.lg}`,
+                  backgroundColor: theme.colors.primary,
+                  color: '#fff',
+                  border: 'none',
+                  borderRadius: theme.borderRadius.md,
+                  cursor: 'pointer',
+                  fontSize: theme.typography.fontSize.base,
+                  fontWeight: '600',
+                  width: '100%',
+                }} onClick={() => {
+                  const code = `<iframe
+  src="https://soundmoney.io/embed/widget?artist=YourArtist&track=YourTrack"
+  width="300"
+  height="400"
+  style="border: none; border-radius: 12px;"
+  allow="autoplay"
+></iframe>`;
+                  navigator.clipboard.writeText(code);
+                  alert('✅ Embed code copied to clipboard!');
+                }}>
+                  📋 Copy Embed Code
+                </button>
+              </div>
+            </div>
+          </Card>
+
           <div style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
