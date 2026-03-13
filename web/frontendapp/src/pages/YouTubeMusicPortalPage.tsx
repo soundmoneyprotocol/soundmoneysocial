@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Header, Card, Button, Badge } from '../components';
 import { theme } from '../theme/theme';
-import { youtubeMusicService, ManagedTrack, TrackCatalog } from '../services/youtubeMusic';
+import { youtubeMusicService, ManagedTrack, TrackCatalog, TrackMetadata } from '../services/youtubeMusic';
 import { streamingHistoryService } from '../services/streamingHistoryService';
 import fileStorageService from '../services/fileStorageService';
 
@@ -18,6 +18,7 @@ interface FormData {
   spotifyUrl: string;
   streamPrice: string;
   duration: number;
+  metadata?: TrackMetadata;
   fileData?: string;
   fileType?: string;
   fileName?: string;
@@ -35,9 +36,21 @@ const YouTubeMusicPortalPage: React.FC = () => {
     spotifyUrl: '',
     streamPrice: '0.0015',
     duration: 180,
+    metadata: {
+      description: '',
+      releaseDate: '',
+      version: '',
+      remixInfo: '',
+      producer: '',
+      songwriter: '',
+      credits: '',
+      tags: [],
+    },
   });
   const [searchQuery, setSearchQuery] = useState('');
   const [uploadedFileName, setUploadedFileName] = useState('');
+  const [showMetadataModal, setShowMetadataModal] = useState(false);
+  const [metadataTagInput, setMetadataTagInput] = useState('');
 
   // Load tracks on mount
   useEffect(() => {
@@ -91,6 +104,29 @@ const YouTubeMusicPortalPage: React.FC = () => {
     reader.readAsDataURL(file);
   };
 
+  const handleAddMetadataTag = () => {
+    if (metadataTagInput.trim()) {
+      setFormData(prev => ({
+        ...prev,
+        metadata: {
+          ...prev.metadata,
+          tags: [...(prev.metadata?.tags || []), metadataTagInput.trim()],
+        },
+      }));
+      setMetadataTagInput('');
+    }
+  };
+
+  const handleRemoveMetadataTag = (index: number) => {
+    setFormData(prev => ({
+      ...prev,
+      metadata: {
+        ...prev.metadata,
+        tags: (prev.metadata?.tags || []).filter((_, i) => i !== index),
+      },
+    }));
+  };
+
   const handleAddTrack = async () => {
     if (!formData.title || !formData.artist) {
       alert('Please fill in title and artist');
@@ -112,6 +148,7 @@ const YouTubeMusicPortalPage: React.FC = () => {
           spotifyUrl: formData.spotifyUrl,
           streamPrice: formData.streamPrice,
           duration: formData.duration,
+          metadata: formData.metadata,
         });
         if (updated) {
           // Store file in IndexedDB if provided
@@ -134,7 +171,8 @@ const YouTubeMusicPortalPage: React.FC = () => {
           formData.youtubeUrl,
           formData.streamPrice,
           formData.duration,
-          formData.spotifyUrl
+          formData.spotifyUrl,
+          formData.metadata
         );
 
         // Store file in IndexedDB if provided
@@ -158,9 +196,20 @@ const YouTubeMusicPortalPage: React.FC = () => {
         spotifyUrl: '',
         streamPrice: '0.0015',
         duration: 180,
+        metadata: {
+          description: '',
+          releaseDate: '',
+          version: '',
+          remixInfo: '',
+          producer: '',
+          songwriter: '',
+          credits: '',
+          tags: [],
+        },
       });
       setUploadedFileName('');
       setShowAddForm(false);
+      setShowMetadataModal(false);
       loadTracks();
     } catch (error) {
       console.error('Error adding track:', error);
@@ -177,6 +226,16 @@ const YouTubeMusicPortalPage: React.FC = () => {
       spotifyUrl: track.spotifyUrl || '',
       streamPrice: track.streamPrice,
       duration: track.duration,
+      metadata: track.metadata || {
+        description: '',
+        releaseDate: '',
+        version: '',
+        remixInfo: '',
+        producer: '',
+        songwriter: '',
+        credits: '',
+        tags: [],
+      },
       fileData: track.fileData,
       fileType: track.fileType,
       fileName: track.fileName,
@@ -330,8 +389,19 @@ const YouTubeMusicPortalPage: React.FC = () => {
               spotifyUrl: '',
               streamPrice: '0.0015',
               duration: 180,
+              metadata: {
+                description: '',
+                releaseDate: '',
+                version: '',
+                remixInfo: '',
+                producer: '',
+                songwriter: '',
+                credits: '',
+                tags: [],
+              },
             });
             setUploadedFileName('');
+            setShowMetadataModal(false);
           }}
         >
           {showAddForm ? '✕ Cancel' : '➕ Add Track'}
@@ -589,10 +659,344 @@ const YouTubeMusicPortalPage: React.FC = () => {
             )}
           </div>
 
-          <Button variant="primary" onClick={handleAddTrack}>
-            {editingId ? '💾 Update Track' : '➕ Add Track'}
-          </Button>
+          <div style={{ display: 'flex', gap: theme.spacing.md }}>
+            <Button variant="secondary" onClick={() => setShowMetadataModal(true)}>
+              📋 Edit Metadata
+            </Button>
+            <Button variant="primary" onClick={handleAddTrack}>
+              {editingId ? '💾 Update Track' : '➕ Add Track'}
+            </Button>
+          </div>
         </Card>
+      )}
+
+      {/* Metadata Modal */}
+      {showMetadataModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.7)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000,
+        }}>
+          <Card style={{
+            width: '90%',
+            maxWidth: '600px',
+            maxHeight: '80vh',
+            overflowY: 'auto',
+            padding: theme.spacing.lg,
+          }}>
+            <h3 style={{ margin: 0, marginBottom: theme.spacing.md, color: theme.colors.text.primary }}>
+              📋 Track Metadata
+            </h3>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: theme.spacing.md }}>
+              <div>
+                <label style={{
+                  display: 'block',
+                  marginBottom: theme.spacing.xs,
+                  color: theme.colors.text.secondary,
+                  fontSize: theme.typography.fontSize.sm,
+                }}>
+                  Description
+                </label>
+                <textarea
+                  value={formData.metadata?.description || ''}
+                  onChange={(e) => setFormData({
+                    ...formData,
+                    metadata: { ...formData.metadata, description: e.target.value },
+                  })}
+                  style={{
+                    width: '100%',
+                    padding: theme.spacing.sm,
+                    borderRadius: theme.borderRadius.md,
+                    border: `1px solid ${theme.colors.gray[700]}`,
+                    backgroundColor: theme.colors.background.secondary,
+                    color: theme.colors.text.primary,
+                    fontSize: theme.typography.fontSize.base,
+                    boxSizing: 'border-box',
+                    minHeight: '80px',
+                    fontFamily: 'inherit',
+                  }}
+                  placeholder="Track description, notes, or background..."
+                />
+              </div>
+
+              <div>
+                <label style={{
+                  display: 'block',
+                  marginBottom: theme.spacing.xs,
+                  color: theme.colors.text.secondary,
+                  fontSize: theme.typography.fontSize.sm,
+                }}>
+                  Release Date
+                </label>
+                <input
+                  type="date"
+                  value={formData.metadata?.releaseDate || ''}
+                  onChange={(e) => setFormData({
+                    ...formData,
+                    metadata: { ...formData.metadata, releaseDate: e.target.value },
+                  })}
+                  style={{
+                    width: '100%',
+                    padding: theme.spacing.sm,
+                    borderRadius: theme.borderRadius.md,
+                    border: `1px solid ${theme.colors.gray[700]}`,
+                    backgroundColor: theme.colors.background.secondary,
+                    color: theme.colors.text.primary,
+                    fontSize: theme.typography.fontSize.base,
+                    boxSizing: 'border-box',
+                  }}
+                />
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: theme.spacing.md }}>
+                <div>
+                  <label style={{
+                    display: 'block',
+                    marginBottom: theme.spacing.xs,
+                    color: theme.colors.text.secondary,
+                    fontSize: theme.typography.fontSize.sm,
+                  }}>
+                    Version
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.metadata?.version || ''}
+                    onChange={(e) => setFormData({
+                      ...formData,
+                      metadata: { ...formData.metadata, version: e.target.value },
+                    })}
+                    style={{
+                      width: '100%',
+                      padding: theme.spacing.sm,
+                      borderRadius: theme.borderRadius.md,
+                      border: `1px solid ${theme.colors.gray[700]}`,
+                      backgroundColor: theme.colors.background.secondary,
+                      color: theme.colors.text.primary,
+                      fontSize: theme.typography.fontSize.base,
+                      boxSizing: 'border-box',
+                    }}
+                    placeholder="e.g., Original, Remix, Extended"
+                  />
+                </div>
+
+                <div>
+                  <label style={{
+                    display: 'block',
+                    marginBottom: theme.spacing.xs,
+                    color: theme.colors.text.secondary,
+                    fontSize: theme.typography.fontSize.sm,
+                  }}>
+                    Remix Info
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.metadata?.remixInfo || ''}
+                    onChange={(e) => setFormData({
+                      ...formData,
+                      metadata: { ...formData.metadata, remixInfo: e.target.value },
+                    })}
+                    style={{
+                      width: '100%',
+                      padding: theme.spacing.sm,
+                      borderRadius: theme.borderRadius.md,
+                      border: `1px solid ${theme.colors.gray[700]}`,
+                      backgroundColor: theme.colors.background.secondary,
+                      color: theme.colors.text.primary,
+                      fontSize: theme.typography.fontSize.base,
+                      boxSizing: 'border-box',
+                    }}
+                    placeholder="Remix by artist/producer"
+                  />
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: theme.spacing.md }}>
+                <div>
+                  <label style={{
+                    display: 'block',
+                    marginBottom: theme.spacing.xs,
+                    color: theme.colors.text.secondary,
+                    fontSize: theme.typography.fontSize.sm,
+                  }}>
+                    Producer
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.metadata?.producer || ''}
+                    onChange={(e) => setFormData({
+                      ...formData,
+                      metadata: { ...formData.metadata, producer: e.target.value },
+                    })}
+                    style={{
+                      width: '100%',
+                      padding: theme.spacing.sm,
+                      borderRadius: theme.borderRadius.md,
+                      border: `1px solid ${theme.colors.gray[700]}`,
+                      backgroundColor: theme.colors.background.secondary,
+                      color: theme.colors.text.primary,
+                      fontSize: theme.typography.fontSize.base,
+                      boxSizing: 'border-box',
+                    }}
+                    placeholder="Producer name(s)"
+                  />
+                </div>
+
+                <div>
+                  <label style={{
+                    display: 'block',
+                    marginBottom: theme.spacing.xs,
+                    color: theme.colors.text.secondary,
+                    fontSize: theme.typography.fontSize.sm,
+                  }}>
+                    Songwriter
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.metadata?.songwriter || ''}
+                    onChange={(e) => setFormData({
+                      ...formData,
+                      metadata: { ...formData.metadata, songwriter: e.target.value },
+                    })}
+                    style={{
+                      width: '100%',
+                      padding: theme.spacing.sm,
+                      borderRadius: theme.borderRadius.md,
+                      border: `1px solid ${theme.colors.gray[700]}`,
+                      backgroundColor: theme.colors.background.secondary,
+                      color: theme.colors.text.primary,
+                      fontSize: theme.typography.fontSize.base,
+                      boxSizing: 'border-box',
+                    }}
+                    placeholder="Songwriter name(s)"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label style={{
+                  display: 'block',
+                  marginBottom: theme.spacing.xs,
+                  color: theme.colors.text.secondary,
+                  fontSize: theme.typography.fontSize.sm,
+                }}>
+                  Credits
+                </label>
+                <textarea
+                  value={formData.metadata?.credits || ''}
+                  onChange={(e) => setFormData({
+                    ...formData,
+                    metadata: { ...formData.metadata, credits: e.target.value },
+                  })}
+                  style={{
+                    width: '100%',
+                    padding: theme.spacing.sm,
+                    borderRadius: theme.borderRadius.md,
+                    border: `1px solid ${theme.colors.gray[700]}`,
+                    backgroundColor: theme.colors.background.secondary,
+                    color: theme.colors.text.primary,
+                    fontSize: theme.typography.fontSize.base,
+                    boxSizing: 'border-box',
+                    minHeight: '60px',
+                    fontFamily: 'inherit',
+                  }}
+                  placeholder="Additional credits (musicians, engineers, etc.)"
+                />
+              </div>
+
+              <div>
+                <label style={{
+                  display: 'block',
+                  marginBottom: theme.spacing.xs,
+                  color: theme.colors.text.secondary,
+                  fontSize: theme.typography.fontSize.sm,
+                }}>
+                  Tags
+                </label>
+                <div style={{ display: 'flex', gap: theme.spacing.sm, marginBottom: theme.spacing.sm }}>
+                  <input
+                    type="text"
+                    value={metadataTagInput}
+                    onChange={(e) => setMetadataTagInput(e.target.value)}
+                    onKeyPress={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        handleAddMetadataTag();
+                      }
+                    }}
+                    style={{
+                      flex: 1,
+                      padding: theme.spacing.sm,
+                      borderRadius: theme.borderRadius.md,
+                      border: `1px solid ${theme.colors.gray[700]}`,
+                      backgroundColor: theme.colors.background.secondary,
+                      color: theme.colors.text.primary,
+                      fontSize: theme.typography.fontSize.base,
+                      boxSizing: 'border-box',
+                    }}
+                    placeholder="Add a tag and press Enter or click +"
+                  />
+                  <button
+                    onClick={handleAddMetadataTag}
+                    style={{
+                      padding: `${theme.spacing.sm} ${theme.spacing.md}`,
+                      borderRadius: theme.borderRadius.md,
+                      border: 'none',
+                      backgroundColor: theme.colors.primary,
+                      color: 'white',
+                      cursor: 'pointer',
+                      fontWeight: 600,
+                    }}
+                  >
+                    +
+                  </button>
+                </div>
+                {formData.metadata?.tags && formData.metadata.tags.length > 0 && (
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: theme.spacing.xs }}>
+                    {formData.metadata.tags.map((tag, index) => (
+                      <Badge
+                        key={index}
+                        variant="info"
+                        size="sm"
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: theme.spacing.xs,
+                          cursor: 'pointer',
+                        }}
+                        onClick={() => handleRemoveMetadataTag(index)}
+                      >
+                        {tag} ✕
+                      </Badge>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', gap: theme.spacing.md, marginTop: theme.spacing.lg }}>
+              <Button
+                variant="secondary"
+                onClick={() => setShowMetadataModal(false)}
+              >
+                ← Back
+              </Button>
+              <Button
+                variant="primary"
+                onClick={() => setShowMetadataModal(false)}
+              >
+                ✓ Done
+              </Button>
+            </div>
+          </Card>
+        </div>
       )}
 
       {/* Search */}

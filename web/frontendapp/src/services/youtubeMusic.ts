@@ -3,6 +3,17 @@
  * Manages track catalog and streaming data for non-technical users
  */
 
+export interface TrackMetadata {
+  description?: string;
+  releaseDate?: string;
+  version?: string;
+  remixInfo?: string;
+  producer?: string;
+  songwriter?: string;
+  credits?: string;
+  tags?: string[];
+}
+
 export interface ManagedTrack {
   id: string;
   title: string;
@@ -16,6 +27,7 @@ export interface ManagedTrack {
   fileType?: string; // MIME type (audio/mpeg, video/mp4, image/gif, etc.)
   fileName?: string; // Original file name
   duration: number; // seconds
+  metadata?: TrackMetadata;
   enabled: boolean; // Whether track is available for streaming
   addedAt: string; // ISO timestamp
 }
@@ -39,7 +51,8 @@ class YouTubeMusicService {
     youtubeUrl: string,
     streamPrice: string = '0.0015',
     duration: number = 180,
-    spotifyUrl?: string
+    spotifyUrl?: string,
+    metadata?: TrackMetadata
   ): ManagedTrack {
     const track: ManagedTrack = {
       id: `track_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
@@ -50,6 +63,7 @@ class YouTubeMusicService {
       youtubeUrl,
       spotifyUrl,
       duration,
+      metadata,
       enabled: true,
       addedAt: new Date().toISOString(),
     };
