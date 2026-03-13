@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Container, Header, Card, Button, Badge } from '../components';
 import { theme } from '../theme/theme';
 import { useNavigate } from 'react-router-dom';
+import { downloadAppleWalletPass, supportsAppleWallet } from '../utils/passKitGenerator';
 
 interface Event {
   id: string;
@@ -275,6 +276,26 @@ const TicketsPage: React.FC = () => {
       alert(`🔌 Integration disconnected`);
     }
   };
+
+  const handleAddToAppleWallet = (ticket: OwnedTicket) => {
+    if (!supportsAppleWallet()) {
+      alert('⚠️ Apple Wallet is only available on iPhone, iPad, and Mac. Please try again from an Apple device.');
+      return;
+    }
+
+    downloadAppleWalletPass({
+      ticketNumber: ticket.ticketNumber,
+      eventTitle: ticket.eventTitle,
+      artist: ticket.artist,
+      eventDate: ticket.date,
+      eventTime: '19:00',
+      venue: 'Event Venue',
+      location: 'San Francisco, CA',
+      price: ticket.price,
+      barcode: ticket.ticketNumber,
+    });
+  };
+
 
   const eventCardStyles: React.CSSProperties = {
     marginBottom: theme.spacing.md,
@@ -602,8 +623,21 @@ const TicketsPage: React.FC = () => {
                   <div style={{
                     display: 'flex',
                     gap: theme.spacing.md,
+                    flexWrap: 'wrap',
                   }}>
                     <Button variant="primary">📱 View Ticket</Button>
+                    <Button 
+                      variant="secondary"
+                      onClick={() => handleAddToAppleWallet(ticket)}
+                      style={{ 
+                        backgroundColor: '#000000',
+                        color: 'white',
+                        border: '1px solid white',
+                      }}
+                      title="Add to Apple Wallet (iOS/macOS)"
+                    >
+                      🍎 Wallet
+                    </Button>
                     <Button variant="secondary">🎟️ Transfer</Button>
                   </div>
                 </Card>
