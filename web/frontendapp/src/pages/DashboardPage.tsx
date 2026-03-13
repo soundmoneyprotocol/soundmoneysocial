@@ -3,6 +3,7 @@ import { Container, Header, Card, Button } from '../components';
 import { theme } from '../theme/theme';
 import { useAuth } from '../contexts/AuthContext';
 import { streamingHistoryService, StreamingSession } from '../services/streamingHistoryService';
+import { formatBZY } from '../utils/formatBZY';
 
 const DashboardPage: React.FC = () => {
   const { user, logout } = useAuth();
@@ -66,7 +67,7 @@ const DashboardPage: React.FC = () => {
             fontFamily: 'monospace',
             marginBottom: theme.spacing.sm,
           }}>
-            {stats.totalEarned} BZY
+            {formatBZY(parseFloat(stats.totalEarned))} BZY
           </div>
           <p style={{ color: theme.colors.text.secondary, margin: 0, fontSize: theme.typography.fontSize.sm }}>
             💰 From {stats.totalSessions} streaming sessions
@@ -154,7 +155,7 @@ const DashboardPage: React.FC = () => {
                       color: theme.colors.accent,
                       fontWeight: 600,
                     }}>
-                      {track.totalEarned} BZY
+                      {formatBZY(parseFloat(track.totalEarned))} BZY
                     </td>
                   </tr>
                 ))}
@@ -220,7 +221,7 @@ const DashboardPage: React.FC = () => {
                       fontWeight: 600,
                       fontSize: theme.typography.fontSize.lg,
                     }}>
-                      +{session.totalEarned} BZY
+                      +{formatBZY(parseFloat(session.totalEarned))} BZY
                     </p>
                     <p style={{
                       margin: 0,

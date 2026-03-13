@@ -4,6 +4,7 @@ import { theme } from '../theme/theme';
 import { youtubeMusicService, ManagedTrack, TrackCatalog, TrackMetadata } from '../services/youtubeMusic';
 import { streamingHistoryService } from '../services/streamingHistoryService';
 import fileStorageService from '../services/fileStorageService';
+import { formatBZY } from '../utils/formatBZY';
 
 interface TrackWithEarnings extends ManagedTrack {
   earnings?: number;
@@ -349,7 +350,7 @@ const YouTubeMusicPortalPage: React.FC = () => {
             Total Earnings
           </p>
           <p style={{ margin: 0, fontSize: '32px', fontWeight: 'bold', color: theme.colors.accent }}>
-            {totalEarnings.toFixed(6)} BZY
+            {formatBZY(totalEarnings)} BZY
           </p>
           <p style={{ margin: 0, marginTop: '4px', color: theme.colors.text.secondary, fontSize: theme.typography.fontSize.sm }}>
             From streaming sessions
@@ -361,7 +362,7 @@ const YouTubeMusicPortalPage: React.FC = () => {
             Avg. Per Track
           </p>
           <p style={{ margin: 0, fontSize: '32px', fontWeight: 'bold', color: theme.colors.info }}>
-            {totalTracks > 0 ? (totalEarnings / totalTracks).toFixed(6) : '0'} BZY
+            {totalTracks > 0 ? formatBZY(totalEarnings / totalTracks) : '0'} BZY
           </p>
           <p style={{ margin: 0, marginTop: '4px', color: theme.colors.text.secondary, fontSize: theme.typography.fontSize.sm }}>
             Average earnings
@@ -1100,7 +1101,7 @@ const YouTubeMusicPortalPage: React.FC = () => {
                       {track.sessions || 0}
                     </td>
                     <td style={{ padding: theme.spacing.md, textAlign: 'right', color: theme.colors.accent, fontWeight: 600 }}>
-                      {(track.earnings || 0).toFixed(6)} BZY
+                      {formatBZY(track.earnings || 0)} BZY
                     </td>
                     <td style={{ padding: theme.spacing.md, textAlign: 'center' }}>
                       <button
