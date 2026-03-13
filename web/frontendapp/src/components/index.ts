@@ -8,7 +8,6 @@ export { default as Input } from './Input';
 export { default as Loading } from './Loading';
 export { default as Modal } from './Modal';
 export { default as AudioPlayer } from './AudioPlayer';
-export { default as MonetizationModal } from './MonetizationModal';
 
 export type { AvatarProps } from './Avatar';
 export type { BadgeProps } from './Badge';
@@ -19,3 +18,4 @@ export type { HeaderProps } from './Header';
 export type { InputProps } from './Input';
 export type { LoadingProps } from './Loading';
 export type { ModalProps } from './Modal';
+

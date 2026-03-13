@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
-import { Card, Button, Badge } from './index';
+import Card from './Card';
+import Button from './Button';
+import Badge from './Badge';
 import { theme } from '../theme/theme';
 
 interface MonetizationModalProps {
