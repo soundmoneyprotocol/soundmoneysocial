@@ -47,111 +47,134 @@ const Navigation: React.FC = () => {
     }
   };
 
-  const profileMenuItems: ProfileMenuItem[] = [
-    {
-      label: 'View Profile',
-      icon: '👤',
-      action: () => {
-        navigate('/profile');
-        setShowProfileDropdown(false);
+  // Build menu items dynamically based on subscription tier
+  const getProfileMenuItems = (): ProfileMenuItem[] => {
+    const baseItems: ProfileMenuItem[] = [
+      {
+        label: 'View Profile',
+        icon: '👤',
+        action: () => {
+          navigate('/profile');
+          setShowProfileDropdown(false);
+        },
       },
-    },
-    {
-      label: 'Chats',
-      icon: '💬',
-      action: () => {
-        setShowChatModal(true);
-        setShowProfileDropdown(false);
+      {
+        label: 'Chats',
+        icon: '💬',
+        action: () => {
+          setShowChatModal(true);
+          setShowProfileDropdown(false);
+        },
       },
-    },
-    {
-      label: 'Community Manager',
-      icon: '🌐',
-      action: () => {
-        setShowCommunityManagerModal(true);
-        setShowProfileDropdown(false);
+      {
+        label: 'Community Manager',
+        icon: '🌐',
+        action: () => {
+          setShowCommunityManagerModal(true);
+          setShowProfileDropdown(false);
+        },
       },
-    },
-    {
-      label: 'Artist Pro',
-      icon: '🎤',
-      action: () => {
-        navigate('/pro-artist');
-        setShowProfileDropdown(false);
-      },
-    },
-    {
-      label: 'Subscription',
-      icon: '💎',
-      action: () => {
-        // Auto-navigate based on subscription tier
-        if (isTeamPlan) {
+    ];
+
+    // Add tier-specific items (Artist Pro for pro tier, Team Management for team tier)
+    if (isTeamPlan) {
+      baseItems.push({
+        label: 'Team Management',
+        icon: '👥',
+        action: () => {
           navigate('/team');
-        } else if (tier === 'pro') {
+          setShowProfileDropdown(false);
+        },
+      });
+    } else if (tier === 'pro') {
+      baseItems.push({
+        label: 'Artist Pro',
+        icon: '🎤',
+        action: () => {
           navigate('/pro-artist');
-        } else {
-          setShowSubscriptionModal(true);
-        }
-        setShowProfileDropdown(false);
+          setShowProfileDropdown(false);
+        },
+      });
+    }
+
+    // Add remaining items
+    baseItems.push(
+      {
+        label: 'Subscription',
+        icon: '💎',
+        action: () => {
+          if (isTeamPlan) {
+            navigate('/team');
+          } else if (tier === 'pro') {
+            navigate('/pro-artist');
+          } else {
+            setShowSubscriptionModal(true);
+          }
+          setShowProfileDropdown(false);
+        },
       },
-    },
-    {
-      label: 'Monetization',
-      icon: '💰',
-      action: () => {
-        setShowMonetizationModal(true);
-        setShowProfileDropdown(false);
+      {
+        label: 'Monetization',
+        icon: '💰',
+        action: () => {
+          setShowMonetizationModal(true);
+          setShowProfileDropdown(false);
+        },
       },
-    },
-    {
-      label: 'Account Settings',
-      icon: '⚙️',
-      action: () => {
-        navigate('/settings');
-        setShowProfileDropdown(false);
+      {
+        label: 'Account Settings',
+        icon: '⚙️',
+        action: () => {
+          navigate('/settings');
+          setShowProfileDropdown(false);
+        },
       },
-    },
-    {
-      label: 'Wallet & Payouts',
-      icon: '💳',
-      action: () => {
-        navigate('/payouts');
-        setShowProfileDropdown(false);
+      {
+        label: 'Wallet & Payouts',
+        icon: '💳',
+        action: () => {
+          navigate('/payouts');
+          setShowProfileDropdown(false);
+        },
       },
-    },
-    {
-      label: 'Tickets & Events',
-      icon: '🎫',
-      action: () => {
-        navigate('/tickets');
-        setShowProfileDropdown(false);
+      {
+        label: 'Tickets & Events',
+        icon: '🎫',
+        action: () => {
+          navigate('/tickets');
+          setShowProfileDropdown(false);
+        },
       },
-    },
-    {
-      label: 'Referrals',
-      icon: '🤝',
-      action: () => {
-        navigate('/referrals');
-        setShowProfileDropdown(false);
+      {
+        label: 'Referrals',
+        icon: '🤝',
+        action: () => {
+          navigate('/referrals');
+          setShowProfileDropdown(false);
+        },
       },
-    },
-    {
-      label: 'Privacy Tools',
-      icon: '🔒',
-      action: () => {
-        navigate('/privacy');
-        setShowProfileDropdown(false);
+      {
+        label: 'Privacy Tools',
+        icon: '🔒',
+        action: () => {
+          navigate('/privacy');
+          setShowProfileDropdown(false);
+        },
       },
-    },
-    {
-      label: 'Logout',
-      icon: '🚪',
-      action: () => {
-        handleLogout();
-        setShowProfileDropdown(false);
-      },
-    },
-  ];
+      {
+        label: 'Logout',
+        icon: '🚪',
+        action: () => {
+          handleLogout();
+        },
+      }
+    );
+
+    return baseItems;
+  };
+
+  const profileMenuItems = getProfileMenuItems();
+
 
   const navStyles: React.CSSProperties = {
     backgroundColor: theme.colors.background.secondary,
