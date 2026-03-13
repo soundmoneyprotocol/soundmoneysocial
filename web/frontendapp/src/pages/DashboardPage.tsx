@@ -1,215 +1,297 @@
-import React, { useState } from 'react';
-import { Container, Header, Card, Button, Avatar, Badge, Input } from '../components';
+import React, { useState, useEffect } from 'react';
+import { Container, Header, Card, Button } from '../components';
 import { theme } from '../theme/theme';
 import { useAuth } from '../contexts/AuthContext';
-import { formatNumber, formatCurrency } from '../utils/formatters';
-
-interface UserStats {
-  followers: number;
-  following: number;
-  posts: number;
-  earnings: number;
-  bezyBalance: number;
-}
+import { streamingHistoryService, StreamingSession } from '../services/streamingHistoryService';
 
 const DashboardPage: React.FC = () => {
   const { user, logout } = useAuth();
-  const [isEditing, setIsEditing] = useState(false);
-  const [stats] = useState<UserStats>({
-    followers: 1240,
-    following: 342,
-    posts: 28,
-    earnings: 2450.75,
-    bezyBalance: 125.5,
+  const [stats, setStats] = useState({
+    totalEarned: '0',
+    totalSessions: 0,
+    totalDuration: 0,
+    topTracks: [] as any[],
+    recentSessions: [] as StreamingSession[],
   });
 
-  const containerStyles: React.CSSProperties = {
-    maxWidth: '1000px',
-    margin: '0 auto',
+  useEffect(() => {
+    // Load streaming stats
+    const history = streamingHistoryService.getStats();
+    const topTracks = streamingHistoryService.getTopTracks(5);
+
+    setStats({
+      totalEarned: history.totalEarned,
+      totalSessions: history.totalSessions,
+      totalDuration: history.totalDuration,
+      topTracks,
+      recentSessions: history.sessions.slice(-10).reverse(),
+    });
+  }, []);
+
+  const formatDuration = (seconds: number): string => {
+    if (seconds < 60) return `${seconds}s`;
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}m ${secs}s`;
   };
 
-  const profileCardStyles: React.CSSProperties = {
-    display: 'flex',
-    alignItems: 'flex-start',
-    gap: theme.spacing.lg,
-    marginBottom: theme.spacing.lg,
-  };
-
-  const avatarStyles: React.CSSProperties = {
-    minWidth: '120px',
-  };
-
-  const profileInfoStyles: React.CSSProperties = {
-    flex: 1,
-  };
-
-  const usernameStyles: React.CSSProperties = {
-    fontSize: theme.typography.fontSize.xxl,
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.text.primary,
-    margin: `0 0 ${theme.spacing.sm} 0`,
-  };
-
-  const emailStyles: React.CSSProperties = {
-    fontSize: theme.typography.fontSize.base,
-    color: theme.colors.text.secondary,
-    margin: 0,
-    marginBottom: theme.spacing.md,
-  };
-
-  const statsGridStyles: React.CSSProperties = {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-    gap: theme.spacing.lg,
-    marginBottom: theme.spacing.lg,
-  };
-
-  const statCardStyles: React.CSSProperties = {
-    padding: theme.spacing.lg,
-    backgroundColor: theme.colors.background.tertiary,
-    borderRadius: theme.borderRadius.md,
-    textAlign: 'center',
-  };
-
-  const statValueStyles: React.CSSProperties = {
-    fontSize: theme.typography.fontSize.xxxl,
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.primary,
-    margin: 0,
-  };
-
-  const statLabelStyles: React.CSSProperties = {
-    fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.text.secondary,
-    margin: `${theme.spacing.sm} 0 0 0`,
-  };
-
-  const earningsCardStyles: React.CSSProperties = {
-    background: `linear-gradient(135deg, ${theme.colors.primary}20 0%, ${theme.colors.accent}20 100%)`,
-    border: `2px solid ${theme.colors.primary}`,
-    padding: theme.spacing.xl,
-    marginBottom: theme.spacing.lg,
-  };
-
-  const earningsHeaderStyles: React.CSSProperties = {
-    color: theme.colors.text.secondary,
-    fontSize: theme.typography.fontSize.sm,
-    margin: 0,
-    marginBottom: theme.spacing.sm,
-  };
-
-  const earningsValueStyles: React.CSSProperties = {
-    fontSize: theme.typography.fontSize.xxxl,
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.primary,
-    margin: 0,
-  };
-
-  const actionsStyles: React.CSSProperties = {
-    display: 'flex',
-    gap: theme.spacing.md,
-    marginTop: theme.spacing.lg,
+  const formatDate = (isoString: string): string => {
+    const date = new Date(isoString);
+    return date.toLocaleString();
   };
 
   return (
-    <Container maxWidth="lg" padding="lg" style={containerStyles}>
+    <Container maxWidth="lg" padding="lg">
       <Header
         title="Dashboard"
-        action={
-          <Button variant="secondary" size="sm" onClick={() => logout()}>
-            Logout
-          </Button>
-        }
+        subtitle="Your streaming earnings and activity"
       />
 
-      {user && (
-        <>
-          <Card style={profileCardStyles}>
-            <div style={avatarStyles}>
-              <Avatar
-                alt={user.username}
-                initials={user.username.charAt(0).toUpperCase()}
-                size="xl"
-              />
-            </div>
-            <div style={profileInfoStyles}>
-              <h2 style={usernameStyles}>{user.username}</h2>
-              <p style={emailStyles}>{user.email}</p>
-              <div style={actionsStyles}>
-                <Button
-                  variant={isEditing ? 'secondary' : 'primary'}
-                  size="sm"
-                  onClick={() => setIsEditing(!isEditing)}
-                >
-                  {isEditing ? 'Cancel' : 'Edit Profile'}
-                </Button>
-                <Button variant="secondary" size="sm">
-                  View Profile
-                </Button>
-              </div>
-            </div>
-          </Card>
-
-          {isEditing && (
-            <Card style={{ marginBottom: theme.spacing.lg }}>
-              <h3 style={{ marginTop: 0 }}>Edit Profile</h3>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: theme.spacing.md }}>
-                <Input label="Username" defaultValue={user.username} />
-                <Input label="Email" type="email" defaultValue={user.email} />
-                <Input label="Bio" placeholder="Tell us about yourself..." />
-                <div style={{ display: 'flex', gap: theme.spacing.md, justifyContent: 'flex-end' }}>
-                  <Button variant="secondary" onClick={() => setIsEditing(false)}>
-                    Cancel
-                  </Button>
-                  <Button variant="primary" onClick={() => setIsEditing(false)}>
-                    Save Changes
-                  </Button>
-                </div>
-              </div>
-            </Card>
-          )}
-
-          <Card style={earningsCardStyles}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: theme.spacing.lg }}>
-              <div>
-                <p style={earningsHeaderStyles}>Total Earnings</p>
-                <p style={earningsValueStyles}>{formatCurrency(stats.earnings)}</p>
-              </div>
-              <div>
-                <p style={earningsHeaderStyles}>BEZY Balance</p>
-                <p style={earningsValueStyles}>{stats.bezyBalance} BEZY</p>
-              </div>
-            </div>
-            <Button style={{ marginTop: theme.spacing.lg, width: '100%' }} variant="primary">
-              Withdraw Earnings
-            </Button>
-          </Card>
-
-          <h3 style={{ color: theme.colors.text.primary, marginTop: theme.spacing.xl }}>
-            Your Stats
-          </h3>
-          <div style={statsGridStyles}>
-            <Card style={statCardStyles} interactive>
-              <p style={statValueStyles}>{formatNumber(stats.followers)}</p>
-              <p style={statLabelStyles}>Followers</p>
-            </Card>
-            <Card style={statCardStyles} interactive>
-              <p style={statValueStyles}>{formatNumber(stats.following)}</p>
-              <p style={statLabelStyles}>Following</p>
-            </Card>
-            <Card style={statCardStyles} interactive>
-              <p style={statValueStyles}>{formatNumber(stats.posts)}</p>
-              <p style={statLabelStyles}>Posts</p>
-            </Card>
-            <Card style={statCardStyles} interactive>
-              <p style={statValueStyles}>
-                <Badge variant="success">Active</Badge>
-              </p>
-              <p style={statLabelStyles}>Status</p>
-            </Card>
+      {/* Main Stats Cards */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+        gap: theme.spacing.lg,
+        marginBottom: theme.spacing.lg,
+      }}>
+        {/* Total Earned */}
+        <Card style={{ textAlign: 'center', padding: theme.spacing.lg }}>
+          <p style={{ color: theme.colors.text.secondary, margin: 0, marginBottom: theme.spacing.sm }}>
+            Total BZY Earned
+          </p>
+          <div style={{
+            fontSize: '48px',
+            fontWeight: 'bold',
+            color: theme.colors.accent,
+            fontFamily: 'monospace',
+            marginBottom: theme.spacing.sm,
+          }}>
+            {stats.totalEarned} BZY
           </div>
-        </>
+          <p style={{ color: theme.colors.text.secondary, margin: 0, fontSize: theme.typography.fontSize.sm }}>
+            💰 From {stats.totalSessions} streaming sessions
+          </p>
+        </Card>
+
+        {/* Total Sessions */}
+        <Card style={{ textAlign: 'center', padding: theme.spacing.lg }}>
+          <p style={{ color: theme.colors.text.secondary, margin: 0, marginBottom: theme.spacing.sm }}>
+            Streaming Sessions
+          </p>
+          <div style={{
+            fontSize: '48px',
+            fontWeight: 'bold',
+            color: theme.colors.primary,
+          }}>
+            {stats.totalSessions}
+          </div>
+          <p style={{ color: theme.colors.text.secondary, margin: 0, fontSize: theme.typography.fontSize.sm }}>
+            🎵 Total time streamed
+          </p>
+        </Card>
+
+        {/* Total Duration */}
+        <Card style={{ textAlign: 'center', padding: theme.spacing.lg }}>
+          <p style={{ color: theme.colors.text.secondary, margin: 0, marginBottom: theme.spacing.sm }}>
+            Total Duration
+          </p>
+          <div style={{
+            fontSize: '48px',
+            fontWeight: 'bold',
+            color: theme.colors.info,
+          }}>
+            {formatDuration(stats.totalDuration)}
+          </div>
+          <p style={{ color: theme.colors.text.secondary, margin: 0, fontSize: theme.typography.fontSize.sm }}>
+            ⏱️ Minutes streamed
+          </p>
+        </Card>
+      </div>
+
+      {/* Top Tracks */}
+      {stats.topTracks.length > 0 && (
+        <Card style={{ marginBottom: theme.spacing.lg }}>
+          <h3 style={{
+            margin: 0,
+            marginBottom: theme.spacing.md,
+            color: theme.colors.text.primary,
+          }}>
+            🎵 Top Streamed Tracks
+          </h3>
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{
+              width: '100%',
+              borderCollapse: 'collapse',
+              color: theme.colors.text.primary,
+            }}>
+              <thead>
+                <tr style={{ borderBottom: `1px solid ${theme.colors.gray[800]}` }}>
+                  <th style={{ textAlign: 'left', padding: theme.spacing.md, color: theme.colors.text.secondary }}>Track</th>
+                  <th style={{ textAlign: 'left', padding: theme.spacing.md, color: theme.colors.text.secondary }}>Artist</th>
+                  <th style={{ textAlign: 'center', padding: theme.spacing.md, color: theme.colors.text.secondary }}>Sessions</th>
+                  <th style={{ textAlign: 'center', padding: theme.spacing.md, color: theme.colors.text.secondary }}>Duration</th>
+                  <th style={{ textAlign: 'right', padding: theme.spacing.md, color: theme.colors.text.secondary }}>BZY Earned</th>
+                </tr>
+              </thead>
+              <tbody>
+                {stats.topTracks.map((track, idx) => (
+                  <tr key={idx} style={{ borderBottom: `1px solid ${theme.colors.gray[800]}` }}>
+                    <td style={{ padding: theme.spacing.md, color: theme.colors.text.primary }}>
+                      {track.trackTitle}
+                    </td>
+                    <td style={{ padding: theme.spacing.md, color: theme.colors.text.secondary }}>
+                      {track.artist}
+                    </td>
+                    <td style={{ padding: theme.spacing.md, textAlign: 'center', color: theme.colors.text.secondary }}>
+                      {track.sessionCount}
+                    </td>
+                    <td style={{ padding: theme.spacing.md, textAlign: 'center', color: theme.colors.text.secondary }}>
+                      {formatDuration(track.totalDuration)}
+                    </td>
+                    <td style={{
+                      padding: theme.spacing.md,
+                      textAlign: 'right',
+                      color: theme.colors.accent,
+                      fontWeight: 600,
+                    }}>
+                      {track.totalEarned} BZY
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </Card>
       )}
+
+      {/* Recent Sessions */}
+      {stats.recentSessions.length > 0 && (
+        <Card style={{ marginBottom: theme.spacing.lg }}>
+          <h3 style={{
+            margin: 0,
+            marginBottom: theme.spacing.md,
+            color: theme.colors.text.primary,
+          }}>
+            📊 Recent Sessions
+          </h3>
+          <div style={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: theme.spacing.md,
+          }}>
+            {stats.recentSessions.map(session => (
+              <div
+                key={session.id}
+                style={{
+                  padding: theme.spacing.md,
+                  backgroundColor: theme.colors.gray[900],
+                  borderRadius: 8,
+                  borderLeft: `4px solid ${theme.colors.accent}`,
+                }}
+              >
+                <div style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'start',
+                  marginBottom: theme.spacing.sm,
+                }}>
+                  <div>
+                    <p style={{
+                      margin: 0,
+                      marginBottom: '4px',
+                      color: theme.colors.text.primary,
+                      fontWeight: 600,
+                    }}>
+                      {session.trackTitle}
+                    </p>
+                    <p style={{
+                      margin: 0,
+                      color: theme.colors.text.secondary,
+                      fontSize: theme.typography.fontSize.sm,
+                    }}>
+                      {session.artist}
+                    </p>
+                  </div>
+                  <div style={{ textAlign: 'right' }}>
+                    <p style={{
+                      margin: 0,
+                      marginBottom: '4px',
+                      color: theme.colors.accent,
+                      fontWeight: 600,
+                      fontSize: theme.typography.fontSize.lg,
+                    }}>
+                      +{session.totalEarned} BZY
+                    </p>
+                    <p style={{
+                      margin: 0,
+                      color: theme.colors.text.secondary,
+                      fontSize: theme.typography.fontSize.sm,
+                    }}>
+                      {formatDuration(session.duration)}
+                    </p>
+                  </div>
+                </div>
+                <p style={{
+                  margin: 0,
+                  color: theme.colors.text.secondary,
+                  fontSize: theme.typography.fontSize.xs,
+                }}>
+                  {formatDate(session.timestamp)}
+                </p>
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
+
+      {/* Empty State */}
+      {stats.totalSessions === 0 && (
+        <Card style={{ textAlign: 'center', padding: theme.spacing.xl }}>
+          <p style={{ color: theme.colors.text.secondary, fontSize: theme.typography.fontSize.lg }}>
+            🎵 No streaming sessions yet
+          </p>
+          <p style={{
+            color: theme.colors.text.secondary,
+            fontSize: theme.typography.fontSize.sm,
+            marginBottom: theme.spacing.lg,
+          }}>
+            Start streaming music on the Feed to earn BZY tokens!
+          </p>
+        </Card>
+      )}
+
+      {/* User Info */}
+      <Card style={{ marginTop: theme.spacing.xl, padding: theme.spacing.lg }}>
+        <h3 style={{ margin: '0 0 ' + theme.spacing.md + ' 0', color: theme.colors.text.primary }}>
+          👤 User Profile
+        </h3>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: theme.spacing.lg }}>
+          <div>
+            <p style={{ margin: 0, marginBottom: '4px', color: theme.colors.text.secondary, fontSize: theme.typography.fontSize.sm }}>
+              Username
+            </p>
+            <p style={{ margin: 0, color: theme.colors.text.primary, fontWeight: 600 }}>
+              {user?.username || 'Not set'}
+            </p>
+          </div>
+          <div>
+            <p style={{ margin: 0, marginBottom: '4px', color: theme.colors.text.secondary, fontSize: theme.typography.fontSize.sm }}>
+              Email
+            </p>
+            <p style={{ margin: 0, color: theme.colors.text.primary, fontWeight: 600 }}>
+              {user?.email || 'Not set'}
+            </p>
+          </div>
+        </div>
+        <Button
+          variant="secondary"
+          size="sm"
+          onClick={logout}
+          style={{ marginTop: theme.spacing.lg }}
+        >
+          🚪 Logout
+        </Button>
+      </Card>
     </Container>
   );
 };

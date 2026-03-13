@@ -1,0 +1,154 @@
+{
+  "$schema": "https://www.gstatic.com/bubblewrap/schema/bubblewrap.schema.json",
+  "apiVersion": 1,
+  "appVersion": "1.0.0",
+  "appVersionCode": 1,
+  "backgroundColor": "#0A0E27",
+  "chromeOsDevice": false,
+  "configVersion": 2,
+  "debug": false,
+  "dir": ".",
+  "display": "standalone",
+  "enableNotifications": true,
+  "features": {
+    "offline": true,
+    "location": false,
+    "payments": true
+  },
+  "shortcuts": [
+    {
+      "name": "Feed",
+      "short_name": "Feed",
+      "description": "View your social feed",
+      "url": "/?shortcut=feed",
+      "icons": []
+    },
+    {
+      "name": "Dashboard",
+      "short_name": "Dashboard",
+      "description": "View your profile and earnings",
+      "url": "/dashboard?shortcut=dashboard",
+      "icons": []
+    },
+    {
+      "name": "Analytics",
+      "short_name": "Analytics",
+      "description": "View your performance metrics",
+      "url": "/analytics?shortcut=analytics",
+      "icons": []
+    },
+    {
+      "name": "Community",
+      "short_name": "Community",
+      "description": "Discover creators and artists",
+      "url": "/community?shortcut=community",
+      "icons": []
+    }
+  ],
+  "display": "standalone",
+  "enableNotifications": true,
+  "fallbackType": "custom",
+  "fallbackUrl": "/",
+  "features": {
+    "badge": "maskable",
+    "offline": true,
+    "location": false,
+    "payments": true,
+    "share": true
+  },
+  "fingerprints": [],
+  "host": "social.soundmoneyprotocol.xyz",
+  "isSigning": true,
+  "keyPassword": "",
+  "launcherIcons": [
+    {
+      "density": "mdpi",
+      "src": "icon-192x192.png"
+    },
+    {
+      "density": "hdpi",
+      "src": "icon-192x192.png"
+    },
+    {
+      "density": "xhdpi",
+      "src": "icon-192x192.png"
+    },
+    {
+      "density": "xxhdpi",
+      "src": "icon-512x512.png"
+    },
+    {
+      "density": "xxxhdpi",
+      "src": "icon-512x512.png"
+    }
+  ],
+  "manifest": "manifest.json",
+  "maskableIcon": {
+    "density": "mdpi",
+    "src": "icon-maskable-192x192.png"
+  },
+  "minSdkVersion": 21,
+  "name": "SoundMoney Social",
+  "orientation": "portrait",
+  "packageId": "xyz.soundmoney.social",
+  "paths": {
+    "androidStudioPath": "/Applications/Android\\ Studio.app/Contents",
+    "androidHome": "~/Library/Android/sdk"
+  },
+  "preferRelated": false,
+  "relatedPackages": [],
+  "resizableActivities": false,
+  "scaffoldVersion": 4,
+  "shareTarget": {
+    "action": "/share",
+    "method": "POST",
+    "enctype": "multipart/form-data",
+    "params": {
+      "title": "title",
+      "text": "text",
+      "url": "url",
+      "files": [
+        {
+          "name": "media",
+          "accept": ["audio/*", "image/*"]
+        }
+      ]
+    }
+  },
+  "shortcuts": [
+    {
+      "name": "Feed",
+      "short_name": "Feed",
+      "description": "View your social feed",
+      "url": "/?shortcut=feed"
+    },
+    {
+      "name": "Dashboard",
+      "short_name": "Dashboard",
+      "description": "View your profile and earnings",
+      "url": "/dashboard?shortcut=dashboard"
+    },
+    {
+      "name": "Analytics",
+      "short_name": "Analytics",
+      "description": "View your performance metrics",
+      "url": "/analytics?shortcut=analytics"
+    },
+    {
+      "name": "Community",
+      "short_name": "Community",
+      "description": "Discover creators and artists",
+      "url": "/community?shortcut=community"
+    }
+  ],
+  "signingKey": {
+    "path": "key.jks",
+    "alias": "soundmoney-key"
+  },
+  "splashScreenFadeOutDuration": 300,
+  "startUrl": "/",
+  "statusBarColor": "#0F766E",
+  "targetSdkVersion": 33,
+  "themeColor": "#0F766E",
+  "webManifestUrl": "manifest.json"
+}

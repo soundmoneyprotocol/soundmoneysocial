@@ -14,6 +14,13 @@ import FeedPage from "./pages/FeedPage";
 import DashboardPage from "./pages/DashboardPage";
 import AnalyticsPage from "./pages/AnalyticsPage";
 import CommunityPage from "./pages/CommunityPage";
+import YouTubeMusicPortalPage from "./pages/YouTubeMusicPortalPage";
+import ProfilePage from "./pages/ProfilePage";
+import SettingsPage from "./pages/SettingsPage";
+import PayoutsPage from "./pages/PayoutsPage";
+import PrivacyPage from "./pages/PrivacyPage";
+import ReferralsPage from "./pages/ReferralsPage";
+import TicketsPage from "./pages/TicketsPage";
 
 // Page metadata
 const pageMetadata: { [key: string]: { title: string; description: string } } = {
@@ -28,6 +35,10 @@ const pageMetadata: { [key: string]: { title: string; description: string } } = 
   "/analytics": {
     title: "Analytics - SoundMoney Social",
     description: "Track your performance and engagement analytics",
+  },
+  "/music-portal": {
+    title: "YouTube Music Portal - SoundMoney",
+    description: "Manage your streaming track catalog and view earnings",
   },
   "/community": {
     title: "Community - SoundMoney Social",
@@ -84,7 +95,14 @@ function AppContent() {
         <Route path="/" element={<FeedPage />} />
         <Route path="/dashboard" element={<DashboardPage />} />
         <Route path="/analytics" element={<AnalyticsPage />} />
+        <Route path="/music-portal" element={<YouTubeMusicPortalPage />} />
         <Route path="/community" element={<CommunityPage />} />
+        <Route path="/profile" element={<ProfilePage />} />
+        <Route path="/settings" element={<SettingsPage />} />
+        <Route path="/payouts" element={<PayoutsPage />} />
+        <Route path="/privacy" element={<PrivacyPage />} />
+        <Route path="/referrals" element={<ReferralsPage />} />
+        <Route path="/tickets" element={<TicketsPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </>

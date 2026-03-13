@@ -1,0 +1,19 @@
+# Extracted hooks with dependency issues - temporarily disabled
+# These need to be updated to work with the web adapters
+
+# Issues:
+# 1. Import paths are relative to hooks/extracted/ but services are elsewhere
+# 2. Some hooks import React Native packages (@react-native-async-storage/async-storage)
+# 3. Need to use storageAdapter instead of AsyncStorage
+
+# To re-enable:
+# 1. Fix import paths (e.g., '../services/apiService' → '../../services/apiService')
+# 2. Replace AsyncStorage imports with storageAdapter
+# 3. Update type annotations with proper TypeScript types
+# 4. Test each hook individually
+
+# Priority fixes:
+# - useApi.ts - Core data fetching
+# - useAuth.ts - Authentication (can use existing AuthContext instead)
+# - useBezy.ts - BEZY balance tracking
+# - useSolana.ts - Solana operations (needed for wallet)

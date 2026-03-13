@@ -3,13 +3,112 @@
   <head>
     <meta charset="utf-8" />
     <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
-    <meta property="og:image" content="%PUBLIC_URL%/thumbnail.png" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#000" />
-    <meta name="description" content="Web site created using Locofy" />
-    <title>SoundMoneySocial</title>
+    <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
+    <link rel="apple-touch-icon" href="%PUBLIC_URL%/icon-192x192.png" />
+
+    <!-- Viewport and Mobile Optimization -->
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="SoundMoney" />
+
+    <!-- Theme and Colors -->
+    <meta name="theme-color" content="#0F766E" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#0A0E27" media="(prefers-color-scheme: dark)" />
+
+    <!-- Meta Description and OG Tags -->
+    <meta property="og:image" content="%PUBLIC_URL%/icon-512x512.png" />
+    <meta name="description" content="Connect with artists and earn BEZY tokens by sharing and engaging with music" />
+    <meta property="og:title" content="SoundMoney Social - Creator Economy Platform" />
+    <meta property="og:description" content="Connect with artists and earn BEZY tokens by sharing and engaging with music" />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="SoundMoney Social" />
+    <meta name="twitter:description" content="Creator economy platform powered by BEZY tokens" />
+
+    <!-- PWA and Installability -->
+    <meta name="application-name" content="SoundMoney" />
+    <meta name="msapplication-TileColor" content="#0F766E" />
+    <meta name="msapplication-config" content="%PUBLIC_URL%/browserconfig.xml" />
+
+    <!-- Security Headers (for PWA) -->
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="referrer" content="strict-origin-when-cross-origin" />
+
+    <!-- Disable MetaMask/Ethereum Wallet Extensions for This App -->
+    <!-- This prevents MetaMask and similar extensions from injecting ethereum provider -->
+    <!-- which conflicts with Solana wallet adapter. Keeps them enabled for other apps. -->
+    <script>
+      // Override MetaMask and other EVM wallet extensions ONLY on this domain
+      // This prevents console errors while keeping them active on other sites
+      if (typeof window !== 'undefined') {
+        // Store original ethereum provider if it exists
+        const originalEthereum = window.ethereum;
+
+        // Define a getter that returns undefined for this app
+        Object.defineProperty(window, 'ethereum', {
+          get: function() {
+            return undefined;
+          },
+          set: function(value) {
+            // Silently ignore attempts to set ethereum provider
+          },
+          configurable: false
+        });
+
+        console.log('ℹ️ MetaMask/EVM wallet extensions disabled for SoundMoney (Solana only)');
+        console.log('💡 Your wallet extensions are still active on other websites');
+      }
+    </script>
+
+    <title>SoundMoney Social</title>
   </head>
   <body>
+    <noscript>You need to enable JavaScript to run this app.</noscript>
     <div id="root"></div>
+
+    <!-- Service Worker Registration for PWA -->
+    <script>
+      // Check if PWA is supported
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker
+            .register('%PUBLIC_URL%/service-worker.js')
+            .then((registration) => {
+              console.log('✅ Service Worker registered', registration);
+            })
+            .catch((error) => {
+              console.log('❌ Service Worker registration failed:', error);
+            });
+        });
+      }
+
+      // Detect if app was launched from home screen
+      window.addEventListener('load', () => {
+        if (
+          window.matchMedia('(display-mode: standalone)').matches ||
+          window.matchMedia('(display-mode: fullscreen)').matches
+        ) {
+          console.log('🚀 App running in standalone/fullscreen mode');
+          document.body.classList.add('pwa-standalone');
+        }
+      });
+
+      // Listen for app installation prompt
+      let deferredPrompt;
+      window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+        // Trigger custom install UI
+        window.dispatchEvent(new CustomEvent('pwa-install-prompt', { detail: e }));
+      });
+
+      // Handle successful app installation
+      window.addEventListener('appinstalled', () => {
+        console.log('🎉 App installed successfully');
+        window.dispatchEvent(new Event('pwa-installed'));
+      });
+    </script>
   </body>
 </html>

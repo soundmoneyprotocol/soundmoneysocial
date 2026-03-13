@@ -1,187 +1,510 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Container, Header, Card, Button, Avatar, Badge, Input } from '../components';
 import { theme } from '../theme/theme';
 import { useAuth } from '../contexts/AuthContext';
+import { spotifyService } from '../services/spotifyService';
+import AudioPlayer from '../components/AudioPlayer';
+import { streamingHistoryService } from '../services/streamingHistoryService';
+import { youtubeMusicService } from '../services/youtubeMusic';
+import fileStorageService from '../services/fileStorageService';
 
-interface Post {
+interface Track {
   id: string;
-  author: {
-    name: string;
-    avatar?: string;
-    initials: string;
-  };
-  content: string;
-  timestamp: string;
-  likes: number;
-  comments: number;
-  liked: boolean;
+  title: string;
+  artist: string;
+  genre: string;
+  duration: number; // in seconds
+  coverUrl?: string;
+  streamPrice: string; // BZY per second
+  isPlaying: boolean;
+  audioUrl?: string;
+  source?: 'spotify' | 'uploaded';
 }
+
+interface PaymentStream {
+  isActive: boolean;
+  flowRate: string;
+  totalEarned: string;
+  artist: string;
+  startTime?: number;
+}
+
+const genres = [
+  { id: 'pop', name: 'Pop', emoji: '🎤' },
+  { id: 'hip-hop', name: 'Hip Hop', emoji: '🎤' },
+  { id: 'rock', name: 'Rock', emoji: '🎸' },
+  { id: 'electronic', name: 'Electronic', emoji: '🎛️' },
+  { id: 'indie', name: 'Indie', emoji: '🎵' },
+  { id: 'jazz', name: 'Jazz', emoji: '🎺' },
+];
 
 const FeedPage: React.FC = () => {
   const { user } = useAuth();
-  const [posts, setPosts] = useState<Post[]>([
-    {
-      id: '1',
-      author: {
-        name: 'Alex Producer',
-        initials: 'AP',
-      },
-      content: 'Just released my new track on SoundMoney! Check it out and support independent music 🎵',
-      timestamp: '2 hours ago',
-      likes: 24,
-      comments: 5,
-      liked: false,
-    },
-    {
-      id: '2',
-      author: {
-        name: 'Music Lover',
-        initials: 'ML',
-      },
-      content: 'The quality of music on SoundMoney is incredible. Supporting artists directly is the future!',
-      timestamp: '4 hours ago',
-      likes: 42,
-      comments: 8,
-      liked: false,
-    },
-  ]);
+  const [selectedGenre, setSelectedGenre] = useState('pop');
+  const [tracks, setTracks] = useState<Track[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [currentTrack, setCurrentTrack] = useState<Track | null>(null);
+  const [paymentStream, setPaymentStream] = useState<PaymentStream>({
+    isActive: false,
+    flowRate: '0',
+    totalEarned: '0',
+    artist: '',
+  });
+  const streamingIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  const toggleLike = (postId: string) => {
-    setPosts((prevPosts) =>
-      prevPosts.map((post) =>
-        post.id === postId
-          ? {
-              ...post,
-              liked: !post.liked,
-              likes: post.liked ? post.likes - 1 : post.likes + 1,
+  // Fetch tracks from Spotify and uploaded tracks when genre changes
+  useEffect(() => {
+    const fetchTracksFromSpotify = async () => {
+      setLoading(true);
+      try {
+        // Get Spotify tracks
+        const spotifyTracks = await spotifyService.searchTracksByGenre(selectedGenre, 20);
+        const appTracks = spotifyTracks.map(track => spotifyService.convertToAppTrack(track));
+
+        // Get uploaded tracks from Music Portal
+        const uploadedTracksData = youtubeMusicService.getTracksByGenre(selectedGenre);
+        
+        // Convert uploaded tracks and fetch file data if available
+        const uploadedTracks: Track[] = await Promise.all(
+          uploadedTracksData.map(async (track) => {
+            let audioUrl = '';
+            
+            // If track has file data in IndexedDB, fetch it
+            if (track.fileType?.startsWith('audio/')) {
+              try {
+                const fileData = await fileStorageService.getFile(track.id);
+                if (fileData) {
+                  audioUrl = fileData.fileData;
+                }
+              } catch (error) {
+                console.error('Error fetching file:', error);
+              }
             }
-          : post
-      )
-    );
+            
+            return {
+              id: track.id,
+              title: track.title,
+              artist: track.artist,
+              genre: track.genre,
+              duration: track.duration,
+              coverUrl: track.coverUrl,
+              streamPrice: track.streamPrice,
+              isPlaying: false,
+              audioUrl: audioUrl || track.youtubeUrl, // Fallback to YouTube URL if available
+              source: 'uploaded' as const,
+            };
+          })
+        );
+
+        // Combine Spotify and uploaded tracks, with uploaded tracks first
+        const allTracks = [...uploadedTracks, ...appTracks];
+        setTracks(allTracks);
+        console.log(`✅ Loaded ${appTracks.length} Spotify + ${uploadedTracks.length} uploaded tracks for genre: ${selectedGenre}`);
+      } catch (error) {
+        console.error('Failed to fetch tracks:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTracksFromSpotify();
+  }, [selectedGenre]);
+
+  const startPaymentStream = (track: Track) => {
+    // Stop previous stream if any
+    stopPaymentStream();
+
+    setCurrentTrack({ ...track, isPlaying: true });
+    setPaymentStream({
+      isActive: true,
+      flowRate: track.streamPrice,
+      totalEarned: '0',
+      artist: track.artist,
+      startTime: Date.now(),
+    });
+
+    startStreamingCounter(track.streamPrice);
   };
 
-  const containerStyles: React.CSSProperties = {
-    maxWidth: '600px',
-    margin: '0 auto',
+  const startStreamingCounter = (flowRate: string) => {
+    if (streamingIntervalRef.current) {
+      clearInterval(streamingIntervalRef.current);
+    }
+
+    streamingIntervalRef.current = setInterval(() => {
+      setPaymentStream(prev => {
+        if (!prev.isActive) {
+          if (streamingIntervalRef.current) {
+            clearInterval(streamingIntervalRef.current);
+            streamingIntervalRef.current = null;
+          }
+          return prev;
+        }
+
+        const flowRateNum = parseFloat(prev.flowRate);
+        const currentTotal = parseFloat(prev.totalEarned);
+        const newTotal = (currentTotal + flowRateNum).toFixed(6);
+
+        return {
+          ...prev,
+          totalEarned: newTotal,
+        };
+      });
+    }, 1000);
   };
 
-  const postStyles: React.CSSProperties = {
-    marginBottom: theme.spacing.lg,
+  const stopPaymentStream = () => {
+    if (streamingIntervalRef.current) {
+      clearInterval(streamingIntervalRef.current);
+      streamingIntervalRef.current = null;
+    }
+
+    // Record the streaming session before stopping
+    if (currentTrack && paymentStream.isActive) {
+      const duration = paymentStream.startTime
+        ? Math.floor((Date.now() - paymentStream.startTime) / 1000)
+        : 0;
+
+      streamingHistoryService.recordSession(
+        currentTrack.id,
+        currentTrack.title,
+        currentTrack.artist,
+        currentTrack.genre,
+        paymentStream.flowRate,
+        duration,
+        paymentStream.totalEarned
+      );
+
+      console.log(`📊 Streaming session saved: ${paymentStream.totalEarned} BZY earned`);
+    }
+
+    if (currentTrack) {
+      setCurrentTrack({ ...currentTrack, isPlaying: false });
+    }
+
+    setPaymentStream({
+      isActive: false,
+      flowRate: '0',
+      totalEarned: '0',
+      artist: '',
+    });
   };
 
-  const postHeaderStyles: React.CSSProperties = {
-    display: 'flex',
-    alignItems: 'center',
-    gap: theme.spacing.md,
-    marginBottom: theme.spacing.md,
-  };
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (streamingIntervalRef.current) {
+        clearInterval(streamingIntervalRef.current);
+      }
+    };
+  }, []);
 
-  const authorStyles: React.CSSProperties = {
-    flex: 1,
-  };
-
-  const authorNameStyles: React.CSSProperties = {
-    fontWeight: theme.typography.fontWeight.semibold,
-    color: theme.colors.text.primary,
-    margin: 0,
-    fontSize: theme.typography.fontSize.base,
-  };
-
-  const timestampStyles: React.CSSProperties = {
-    fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.text.secondary,
-    margin: 0,
-  };
-
-  const contentStyles: React.CSSProperties = {
-    color: theme.colors.text.primary,
-    marginBottom: theme.spacing.md,
-    lineHeight: theme.typography.lineHeight.normal,
-  };
-
-  const actionsStyles: React.CSSProperties = {
-    display: 'flex',
-    gap: theme.spacing.md,
-    borderTop: `1px solid ${theme.colors.gray[800]}`,
-    paddingTop: theme.spacing.md,
-  };
-
-  const actionButtonStyles: React.CSSProperties = {
-    flex: 1,
-    display: 'flex',
-    alignItems: 'center',
-    gap: theme.spacing.sm,
-    background: 'none',
-    border: 'none',
-    color: theme.colors.text.secondary,
-    cursor: 'pointer',
-    fontSize: theme.typography.fontSize.sm,
-    padding: 0,
-  };
-
-  const createPostStyles: React.CSSProperties = {
-    marginBottom: theme.spacing.lg,
+  const formatDuration = (seconds: number): string => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
   return (
     <Container maxWidth="lg" padding="lg">
-      <Header title="Social Feed" subtitle="Share your music and connect with the community" />
+      <Header
+        title="Music Genres"
+        subtitle="Discover tracks and earn BZY in real-time"
+      />
 
-      {user && (
-        <Card style={createPostStyles}>
-          <div style={{ display: 'flex', gap: theme.spacing.md, marginBottom: theme.spacing.md }}>
-            <Avatar alt={user.username} initials={user.username.charAt(0).toUpperCase()} size="md" />
-            <div style={{ flex: 1 }}>
-              <Input
-                placeholder="What's on your mind?"
-                style={{ marginBottom: theme.spacing.sm }}
-              />
-              <div style={{ display: 'flex', gap: theme.spacing.sm, justifyContent: 'flex-end' }}>
-                <Button variant="secondary" size="sm">
-                  Cancel
-                </Button>
-                <Button variant="primary" size="sm">
-                  Post
-                </Button>
-              </div>
+      {/* BZY Earning Counter - Hero Section */}
+      {paymentStream.isActive && (
+        <Card
+          style={{
+            marginBottom: theme.spacing.lg,
+            background: `linear-gradient(135deg, ${theme.colors.accent}, ${theme.colors.primary})`,
+            padding: theme.spacing.lg,
+            borderRadius: 16,
+          }}
+        >
+          <div style={{ textAlign: 'center', color: 'white' }}>
+            <p style={{ margin: 0, marginBottom: theme.spacing.sm, fontSize: '14px', opacity: 0.9 }}>
+              🎵 Streaming to {paymentStream.artist}
+            </p>
+            <div style={{
+              fontSize: '48px',
+              fontWeight: 'bold',
+              marginBottom: theme.spacing.sm,
+              fontFamily: 'monospace',
+            }}>
+              {paymentStream.totalEarned} BZY
             </div>
+            <p style={{ margin: 0, fontSize: '14px', opacity: 0.9 }}>
+              +{paymentStream.flowRate} BZY/second
+            </p>
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={stopPaymentStream}
+              style={{ marginTop: theme.spacing.md }}
+            >
+              ⏹️ Stop Streaming
+            </Button>
           </div>
         </Card>
       )}
 
-      <div style={containerStyles}>
-        {posts.map((post) => (
-          <Card key={post.id} style={postStyles}>
-            <div style={postHeaderStyles}>
-              <Avatar alt={post.author.name} initials={post.author.initials} size="md" />
-              <div style={authorStyles}>
-                <p style={authorNameStyles}>{post.author.name}</p>
-                <p style={timestampStyles}>{post.timestamp}</p>
-              </div>
-            </div>
+      {/* Audio Player */}
+      {paymentStream.isActive && currentTrack && (
+        <AudioPlayer
+          audioUrl={currentTrack.audioUrl}
+          trackTitle={currentTrack.title}
+          artistName={currentTrack.artist}
+          onEnded={stopPaymentStream}
+        />
+      )}
 
-            <p style={contentStyles}>{post.content}</p>
-
-            <div style={actionsStyles}>
-              <button
-                style={actionButtonStyles}
-                onClick={() => toggleLike(post.id)}
-              >
-                <span>{post.liked ? '❤️' : '🤍'}</span>
-                <span>{post.likes} Likes</span>
-              </button>
-              <button style={actionButtonStyles}>
-                <span>💬</span>
-                <span>{post.comments} Comments</span>
-              </button>
-              <button style={actionButtonStyles}>
-                <span>🔗</span>
-                <span>Share</span>
-              </button>
-            </div>
-          </Card>
-        ))}
+      {/* Genre Selection */}
+      <div style={{ marginBottom: theme.spacing.lg }}>
+        <h3 style={{
+          color: theme.colors.text.primary,
+          marginTop: 0,
+          marginBottom: theme.spacing.md,
+          fontSize: theme.typography.fontSize.lg,
+        }}>
+          Browse Genres
+        </h3>
+        <div style={{
+          display: 'flex',
+          gap: theme.spacing.md,
+          overflowX: 'auto',
+          paddingBottom: theme.spacing.sm,
+        }}>
+          {genres.map(genre => (
+            <Button
+              key={genre.id}
+              variant={selectedGenre === genre.id ? 'primary' : 'secondary'}
+              size="sm"
+              onClick={() => setSelectedGenre(genre.id)}
+              style={{
+                whiteSpace: 'nowrap',
+                minWidth: 'fit-content',
+              }}
+            >
+              {genre.emoji} {genre.name}
+            </Button>
+          ))}
+        </div>
       </div>
+
+      {/* Tracks List */}
+      <div>
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: theme.spacing.md,
+        }}>
+          <h3 style={{
+            color: theme.colors.text.primary,
+            marginTop: 0,
+            marginBottom: 0,
+            fontSize: theme.typography.fontSize.lg,
+          }}>
+            {genres.find(g => g.id === selectedGenre)?.name} Tracks
+          </h3>
+          {loading && (
+            <span style={{ color: theme.colors.text.secondary, fontSize: theme.typography.fontSize.sm }}>
+              Loading... 🎵
+            </span>
+          )}
+        </div>
+
+        <div style={{
+          maxWidth: '600px',
+          margin: '0 auto',
+        }}>
+          {loading ? (
+            <Card style={{ textAlign: 'center', padding: theme.spacing.lg }}>
+              <p style={{ color: theme.colors.text.secondary }}>Fetching tracks from Spotify...</p>
+            </Card>
+          ) : tracks.length === 0 ? (
+            <Card style={{ textAlign: 'center', padding: theme.spacing.lg }}>
+              <p style={{ color: theme.colors.text.secondary }}>No tracks found for this genre</p>
+            </Card>
+          ) : (
+            tracks.map(track => {
+              const isCurrentTrack = currentTrack?.id === track.id;
+              const isPlaying = isCurrentTrack && paymentStream.isActive;
+
+              return (
+                <Card
+                  key={track.id}
+                  style={{
+                    marginBottom: theme.spacing.md,
+                    borderLeft: isCurrentTrack ? `4px solid ${theme.colors.accent}` : 'none',
+                    transition: 'all 0.3s ease',
+                    backgroundColor: isCurrentTrack ? theme.colors.gray[900] : 'transparent',
+                  }}
+                >
+                  <div style={{
+                    display: 'flex',
+                    gap: theme.spacing.md,
+                    alignItems: 'center',
+                  }}>
+                    {/* Album Art */}
+                    {track.coverUrl ? (
+                      <img
+                        src={track.coverUrl}
+                        alt={track.title}
+                        style={{
+                          width: '60px',
+                          height: '60px',
+                          borderRadius: '8px',
+                          objectFit: 'cover',
+                          flexShrink: 0,
+                        }}
+                      />
+                    ) : (
+                      <div style={{
+                        width: '60px',
+                        height: '60px',
+                        borderRadius: '8px',
+                        backgroundColor: theme.colors.gray[800],
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '32px',
+                        flexShrink: 0,
+                      }}>
+                        🎵
+                      </div>
+                    )}
+
+                    {/* Track Info */}
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <h4 style={{
+                        margin: 0,
+                        marginBottom: '4px',
+                        color: theme.colors.text.primary,
+                        fontSize: theme.typography.fontSize.base,
+                        fontWeight: 600,
+                        textOverflow: 'ellipsis',
+                        overflow: 'hidden',
+                        whiteSpace: 'nowrap',
+                      }}>
+                        {track.title}
+                      </h4>
+                      <div style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: theme.spacing.sm,
+                        marginBottom: theme.spacing.sm,
+                      }}>
+                        <p style={{
+                          margin: 0,
+                          color: theme.colors.text.secondary,
+                          fontSize: theme.typography.fontSize.sm,
+                          textOverflow: 'ellipsis',
+                          overflow: 'hidden',
+                          whiteSpace: 'nowrap',
+                        }}>
+                          {track.artist}
+                        </p>
+                        {track.source === 'uploaded' && (
+                          <Badge variant="success" size="sm">
+                            📤 Your Upload
+                          </Badge>
+                        )}
+                        {!track.source || track.source === 'spotify' && (
+                          <Badge variant="info" size="sm">
+                            🎵 Spotify
+                          </Badge>
+                        )}
+                      </div>
+                      <div style={{
+                        display: 'flex',
+                        gap: theme.spacing.md,
+                        fontSize: theme.typography.fontSize.sm,
+                        flexWrap: 'wrap',
+                      }}>
+                        <span style={{ color: theme.colors.text.secondary }}>
+                          ⏱️ {formatDuration(track.duration)}
+                        </span>
+                        <span style={{
+                          color: theme.colors.accent,
+                          fontWeight: 600,
+                        }}>
+                          💰 {track.streamPrice} BZY/sec
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Play Button */}
+                    <Button
+                      variant={isPlaying ? 'primary' : 'secondary'}
+                      size="sm"
+                      onClick={() => isPlaying ? stopPaymentStream() : startPaymentStream(track)}
+                      style={{
+                        minWidth: '100px',
+                        flexShrink: 0,
+                      }}
+                    >
+                      {isPlaying ? '⏹️ Stop' : '▶️ Play'}
+                    </Button>
+                  </div>
+
+                  {/* Playing Indicator */}
+                  {isPlaying && (
+                    <div style={{
+                      marginTop: theme.spacing.md,
+                      paddingTop: theme.spacing.md,
+                      borderTop: `1px solid ${theme.colors.gray[800]}`,
+                      display: 'flex',
+                      gap: theme.spacing.sm,
+                      alignItems: 'center',
+                    }}>
+                      <span style={{ color: theme.colors.accent, fontSize: '18px' }}>
+                        🎵
+                      </span>
+                      <span style={{ color: theme.colors.text.secondary, fontSize: theme.typography.fontSize.sm }}>
+                        Now streaming... +{paymentStream.flowRate} BZY/second
+                      </span>
+                    </div>
+                  )}
+                </Card>
+              );
+            })
+          )}
+        </div>
+      </div>
+
+      {/* Info Section */}
+      <Card style={{
+        marginTop: theme.spacing.xl,
+        background: theme.colors.gray[900],
+        padding: theme.spacing.lg,
+      }}>
+        <h3 style={{
+          margin: 0,
+          marginBottom: theme.spacing.md,
+          color: theme.colors.accent,
+        }}>
+          💫 SoundMoney Streaming
+        </h3>
+        <p style={{
+          margin: 0,
+          marginBottom: theme.spacing.sm,
+          color: theme.colors.text.secondary,
+          lineHeight: '1.6',
+        }}>
+          Play music from Spotify and earn BZY tokens in real-time! Every second of streaming directly compensates artists.
+          This is the future of music ownership and direct artist support.
+        </p>
+        <p style={{
+          margin: 0,
+          color: theme.colors.text.secondary,
+          fontSize: theme.typography.fontSize.sm,
+          marginTop: theme.spacing.md,
+        }}>
+          🎵 Powered by Spotify API • 💚 Real tracks, real artists, real earnings
+        </p>
+      </Card>
     </Container>
   );
 };

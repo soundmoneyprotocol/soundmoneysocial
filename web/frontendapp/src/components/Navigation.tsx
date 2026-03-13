@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { theme } from '../theme/theme';
@@ -9,10 +9,16 @@ interface NavItem {
   icon: string;
 }
 
+interface ProfileMenuItem {
+  label: string;
+  icon: string;
+  action: () => void;
+}
+
 const navItems: NavItem[] = [
   { label: 'Feed', path: '/', icon: '🏠' },
-  { label: 'Community', path: '/community', icon: '👥' },
   { label: 'Analytics', path: '/analytics', icon: '📊' },
+  { label: 'Music Portal', path: '/music-portal', icon: '🎵' },
   { label: 'Dashboard', path: '/dashboard', icon: '👤' },
 ];
 
@@ -20,6 +26,7 @@ const Navigation: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, logout } = useAuth();
+  const [showProfileDropdown, setShowProfileDropdown] = useState(false);
 
   const handleLogout = async () => {
     try {
@@ -29,6 +36,65 @@ const Navigation: React.FC = () => {
       console.error('Logout failed:', error);
     }
   };
+
+  const profileMenuItems: ProfileMenuItem[] = [
+    {
+      label: 'View Profile',
+      icon: '👤',
+      action: () => {
+        navigate('/profile');
+        setShowProfileDropdown(false);
+      },
+    },
+    {
+      label: 'Account Settings',
+      icon: '⚙️',
+      action: () => {
+        navigate('/settings');
+        setShowProfileDropdown(false);
+      },
+    },
+    {
+      label: 'Wallet & Payouts',
+      icon: '💰',
+      action: () => {
+        navigate('/payouts');
+        setShowProfileDropdown(false);
+      },
+    },
+    {
+      label: 'Tickets & Events',
+      icon: '🎫',
+      action: () => {
+        navigate('/tickets');
+        setShowProfileDropdown(false);
+      },
+    },
+    {
+      label: 'Referrals',
+      icon: '🤝',
+      action: () => {
+        navigate('/referrals');
+        setShowProfileDropdown(false);
+      },
+    },
+    {
+      label: 'Privacy Tools',
+      icon: '🔒',
+      action: () => {
+        navigate('/privacy');
+        setShowProfileDropdown(false);
+      },
+    },
+    {
+      label: 'Logout',
+      icon: '🚪',
+      action: () => {
+        handleLogout();
+        setShowProfileDropdown(false);
+      },
+    },
+  ];
 
   const navStyles: React.CSSProperties = {
     backgroundColor: theme.colors.background.secondary,
@@ -89,32 +155,52 @@ const Navigation: React.FC = () => {
     display: 'flex',
     alignItems: 'center',
     gap: theme.spacing.md,
+    position: 'relative',
   };
 
-  const userInfoStyles: React.CSSProperties = {
+  const profileButtonStyles: React.CSSProperties = {
     display: 'flex',
     alignItems: 'center',
     gap: theme.spacing.sm,
-    paddingRight: theme.spacing.md,
-    borderRight: `1px solid ${theme.colors.gray[800]}`,
-  };
-
-  const usernameStyles: React.CSSProperties = {
-    fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.text.primary,
-    margin: 0,
-  };
-
-  const logoutButtonStyles: React.CSSProperties = {
     padding: `${theme.spacing.sm} ${theme.spacing.md}`,
-    backgroundColor: 'transparent',
-    color: theme.colors.text.secondary,
+    backgroundColor: theme.colors.background.tertiary,
+    color: theme.colors.text.primary,
     border: `1px solid ${theme.colors.gray[700]}`,
     borderRadius: theme.borderRadius.md,
+    cursor: 'pointer',
     fontSize: theme.typography.fontSize.sm,
     fontWeight: theme.typography.fontWeight.medium,
+    transition: 'all 0.2s ease',
+  };
+
+  const dropdownStyles: React.CSSProperties = {
+    position: 'absolute',
+    top: '100%',
+    right: 0,
+    marginTop: theme.spacing.sm,
+    backgroundColor: theme.colors.background.secondary,
+    border: `1px solid ${theme.colors.gray[700]}`,
+    borderRadius: theme.borderRadius.md,
+    boxShadow: '0 10px 25px rgba(0, 0, 0, 0.3)',
+    minWidth: '200px',
+    zIndex: 1000,
+    overflow: 'hidden',
+  };
+
+  const dropdownItemStyles: (isLastItem?: boolean) => React.CSSProperties = (isLastItem = false) => ({
+    display: 'flex',
+    alignItems: 'center',
+    gap: theme.spacing.sm,
+    padding: `${theme.spacing.md} ${theme.spacing.lg}`,
+    color: isLastItem ? theme.colors.danger : theme.colors.text.primary,
     cursor: 'pointer',
     transition: 'all 0.2s ease',
+    borderBottom: isLastItem ? 'none' : `1px solid ${theme.colors.gray[800]}`,
+    fontSize: theme.typography.fontSize.sm,
+  });
+
+  const dropdownItemHoverStyles: React.CSSProperties = {
+    backgroundColor: theme.colors.background.tertiary,
   };
 
   return (
@@ -152,26 +238,70 @@ const Navigation: React.FC = () => {
 
         <div style={rightContainerStyles}>
           {user && (
-            <div style={userInfoStyles}>
-              <p style={usernameStyles}>{user.username}</p>
+            <div style={{ position: 'relative' }}>
+              <button
+                style={profileButtonStyles}
+                onClick={() => setShowProfileDropdown(!showProfileDropdown)}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = theme.colors.background.tertiary;
+                  e.currentTarget.style.borderColor = theme.colors.primary;
+                  e.currentTarget.style.color = theme.colors.primary;
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = theme.colors.background.tertiary;
+                  e.currentTarget.style.borderColor = theme.colors.gray[700];
+                  e.currentTarget.style.color = theme.colors.text.primary;
+                }}
+              >
+                <span>👤</span>
+                <span>{user.username}</span>
+                <span style={{ fontSize: '12px', marginLeft: theme.spacing.xs }}>
+                  {showProfileDropdown ? '▲' : '▼'}
+                </span>
+              </button>
+
+              {showProfileDropdown && (
+                <div style={dropdownStyles}>
+                  {profileMenuItems.map((item, index) => (
+                    <div
+                      key={index}
+                      style={dropdownItemStyles(index === profileMenuItems.length - 1)}
+                      onClick={() => {
+                        item.action();
+                        setShowProfileDropdown(false);
+                      }}
+                      onMouseEnter={(e) => {
+                        Object.assign(e.currentTarget.style, dropdownItemHoverStyles);
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = 'transparent';
+                      }}
+                    >
+                      <span>{item.icon}</span>
+                      <span>{item.label}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
-          <button
-            style={logoutButtonStyles}
-            onClick={handleLogout}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.borderColor = theme.colors.primary;
-              e.currentTarget.style.color = theme.colors.primary;
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.borderColor = theme.colors.gray[700];
-              e.currentTarget.style.color = theme.colors.text.secondary;
-            }}
-          >
-            Logout
-          </button>
         </div>
       </div>
+
+      {/* Close dropdown when clicking outside */}
+      {showProfileDropdown && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            zIndex: 999,
+          }}
+          onClick={() => setShowProfileDropdown(false)}
+        />
+      )}
     </nav>
   );
 };
