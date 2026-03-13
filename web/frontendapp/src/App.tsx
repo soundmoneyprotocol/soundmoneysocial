@@ -45,6 +45,10 @@ const pageMetadata: { [key: string]: { title: string; description: string } } = 
     title: "Community - SoundMoney Social",
     description: "Discover amazing creators and join the SoundMoney movement",
   },
+  "/team": {
+    title: "Team Management - SoundMoney",
+    description: "Manage your team and connect AI-powered analytics integrations",
+  },
 };
 
 function AppContent() {
