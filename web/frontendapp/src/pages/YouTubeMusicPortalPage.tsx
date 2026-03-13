@@ -15,6 +15,7 @@ interface FormData {
   artist: string;
   genre: string;
   youtubeUrl: string;
+  spotifyUrl: string;
   streamPrice: string;
   duration: number;
   fileData?: string;
@@ -31,6 +32,7 @@ const YouTubeMusicPortalPage: React.FC = () => {
     artist: '',
     genre: 'pop',
     youtubeUrl: '',
+    spotifyUrl: '',
     streamPrice: '0.0015',
     duration: 180,
   });
@@ -107,6 +109,7 @@ const YouTubeMusicPortalPage: React.FC = () => {
           artist: formData.artist,
           genre: formData.genre,
           youtubeUrl: formData.youtubeUrl,
+          spotifyUrl: formData.spotifyUrl,
           streamPrice: formData.streamPrice,
           duration: formData.duration,
         });
@@ -130,7 +133,8 @@ const YouTubeMusicPortalPage: React.FC = () => {
           formData.genre,
           formData.youtubeUrl,
           formData.streamPrice,
-          formData.duration
+          formData.duration,
+          formData.spotifyUrl
         );
 
         // Store file in IndexedDB if provided
@@ -151,6 +155,7 @@ const YouTubeMusicPortalPage: React.FC = () => {
         artist: '',
         genre: 'pop',
         youtubeUrl: '',
+        spotifyUrl: '',
         streamPrice: '0.0015',
         duration: 180,
       });
@@ -169,6 +174,7 @@ const YouTubeMusicPortalPage: React.FC = () => {
       artist: track.artist,
       genre: track.genre,
       youtubeUrl: track.youtubeUrl || '',
+      spotifyUrl: track.spotifyUrl || '',
       streamPrice: track.streamPrice,
       duration: track.duration,
       fileData: track.fileData,
@@ -321,6 +327,7 @@ const YouTubeMusicPortalPage: React.FC = () => {
               artist: '',
               genre: 'pop',
               youtubeUrl: '',
+              spotifyUrl: '',
               streamPrice: '0.0015',
               duration: 180,
             });
@@ -459,6 +466,33 @@ const YouTubeMusicPortalPage: React.FC = () => {
                   boxSizing: 'border-box',
                 }}
                 placeholder="https://www.youtube.com/..."
+              />
+            </div>
+
+            <div>
+              <label style={{
+                display: 'block',
+                marginBottom: theme.spacing.xs,
+                color: theme.colors.text.secondary,
+                fontSize: theme.typography.fontSize.sm,
+              }}>
+                Spotify URL
+              </label>
+              <input
+                type="url"
+                value={formData.spotifyUrl}
+                onChange={(e) => setFormData({ ...formData, spotifyUrl: e.target.value })}
+                style={{
+                  width: '100%',
+                  padding: theme.spacing.sm,
+                  borderRadius: theme.borderRadius.md,
+                  border: `1px solid ${theme.colors.gray[700]}`,
+                  backgroundColor: theme.colors.background.secondary,
+                  color: theme.colors.text.primary,
+                  fontSize: theme.typography.fontSize.base,
+                  boxSizing: 'border-box',
+                }}
+                placeholder="https://open.spotify.com/..."
               />
             </div>
 

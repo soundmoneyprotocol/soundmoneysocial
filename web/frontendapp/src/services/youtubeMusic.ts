@@ -10,6 +10,7 @@ export interface ManagedTrack {
   genre: string;
   streamPrice: string; // BZY per second
   youtubeUrl?: string;
+  spotifyUrl?: string;
   coverUrl?: string;
   fileData?: string; // Base64 encoded file data (audio/video/gif)
   fileType?: string; // MIME type (audio/mpeg, video/mp4, image/gif, etc.)
@@ -37,7 +38,8 @@ class YouTubeMusicService {
     genre: string,
     youtubeUrl: string,
     streamPrice: string = '0.0015',
-    duration: number = 180
+    duration: number = 180,
+    spotifyUrl?: string
   ): ManagedTrack {
     const track: ManagedTrack = {
       id: `track_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
@@ -46,6 +48,7 @@ class YouTubeMusicService {
       genre,
       streamPrice,
       youtubeUrl,
+      spotifyUrl,
       duration,
       enabled: true,
       addedAt: new Date().toISOString(),
