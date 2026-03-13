@@ -208,7 +208,7 @@ const FeedPage: React.FC = () => {
   return (
     <Container maxWidth="lg" padding="lg">
       <Header
-        title="Music Genres"
+        title="Stream Music"
         subtitle="Discover tracks and earn BZY in real-time"
       />
 
