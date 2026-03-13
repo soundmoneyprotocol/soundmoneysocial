@@ -18,6 +18,8 @@ export const EmbedWidget: React.FC<EmbedWidgetProps> = ({
 }) => {
   const [bzyCounter, setBzyCounter] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [showEmbedCode, setShowEmbedCode] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   // Simulate BZY earnings counter
   useEffect(() => {
@@ -29,6 +31,13 @@ export const EmbedWidget: React.FC<EmbedWidgetProps> = ({
 
     return () => clearInterval(interval);
   }, [isPlaying]);
+
+
+  const copyEmbedCode = () => {
+    navigator.clipboard.writeText(embedCode);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   const embedCode = `<iframe
   src="https://soundmoney.io/embed/widget?artist=${encodeURIComponent(artistName)}&track=${encodeURIComponent(trackTitle)}&spotify=${encodeURIComponent(spotifyUrl)}"
@@ -162,6 +171,73 @@ export const EmbedWidget: React.FC<EmbedWidgetProps> = ({
           </a>
         )}
       </div>
+
+      {/* Embed Code Section */}
+      {!isEmbed && (
+        <div style={{ marginBottom: theme.spacing.md }}>
+          <button
+            onClick={() => setShowEmbedCode(!showEmbedCode)}
+            style={{
+              width: '100%',
+              padding: `${theme.spacing.sm} ${theme.spacing.md}`,
+              backgroundColor: theme.colors.background.tertiary,
+              color: theme.colors.text.primary,
+              border: `1px solid ${theme.colors.gray[700]}`,
+              borderRadius: theme.borderRadius.md,
+              cursor: 'pointer',
+              fontWeight: 600,
+              fontSize: theme.typography.fontSize.sm,
+              transition: 'all 0.2s',
+            }}
+          >
+            {showEmbedCode ? '⬆️ Hide Embed Code' : '📋 Show Embed Code'}
+          </button>
+          {showEmbedCode && (
+            <div style={{
+              marginTop: theme.spacing.md,
+              padding: theme.spacing.md,
+              backgroundColor: theme.colors.background.primary,
+              borderRadius: theme.borderRadius.md,
+              border: `1px solid ${theme.colors.gray[700]}`,
+            }}>
+              <p style={{ margin: '0 0 8px 0', color: theme.colors.text.secondary, fontSize: theme.typography.fontSize.xs, fontWeight: 600 }}>
+                Copy this code to embed on your website:
+              </p>
+              <code style={{
+                display: 'block',
+                padding: theme.spacing.sm,
+                backgroundColor: theme.colors.background.secondary,
+                borderRadius: theme.borderRadius.sm,
+                overflow: 'auto',
+                color: theme.colors.accent,
+                fontSize: '11px',
+                marginBottom: theme.spacing.sm,
+                whiteSpace: 'pre-wrap',
+                wordBreak: 'break-all',
+              }}>
+                {embedCode}
+              </code>
+              <button
+                onClick={copyEmbedCode}
+                style={{
+                  width: '100%',
+                  padding: `${theme.spacing.xs} ${theme.spacing.md}`,
+                  backgroundColor: copied ? theme.colors.success : theme.colors.primary,
+                  color: '#fff',
+                  border: 'none',
+                  borderRadius: theme.borderRadius.sm,
+                  cursor: 'pointer',
+                  fontWeight: 600,
+                  fontSize: theme.typography.fontSize.sm,
+                  transition: 'all 0.2s',
+                }}
+              >
+                {copied ? '✓ Copied!' : '📋 Copy Code'}
+              </button>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Footer */}
       {!isEmbed && (

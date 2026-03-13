@@ -84,9 +84,11 @@ const Navigation: React.FC = () => {
       label: 'Subscription',
       icon: '💎',
       action: () => {
-        // Auto-navigate Team plan users directly to Team page
+        // Auto-navigate based on subscription tier
         if (isTeamPlan) {
           navigate('/team');
+        } else if (tier === 'pro') {
+          navigate('/pro-artist');
         } else {
           setShowSubscriptionModal(true);
         }
