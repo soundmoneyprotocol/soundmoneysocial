@@ -502,7 +502,7 @@ const FeedPage: React.FC = () => {
           fontSize: theme.typography.fontSize.sm,
           marginTop: theme.spacing.md,
         }}>
-          🎵 Powered by Spotify API • 💚 Real tracks, real artists, real earnings
+          🎵 Powered by SoundMoney API • 💚 Real tracks, real artists, real earnings
         </p>
       </Card>
     </Container>
