@@ -3,8 +3,8 @@
  * Provides wallet state and functions throughout the app
  */
 
-import React, { ReactNode, useEffect } from 'react';
-import { walletAdapterService } from '@/services/walletAdapterService';
+import React, { ReactNode } from 'react';
+// import { walletAdapterService } from '@/services/walletAdapterService';
 
 interface WalletContextProviderProps {
   children: ReactNode;
@@ -29,18 +29,19 @@ export const WalletContextProvider: React.FC<WalletContextProviderProps> = ({
   network = 'mainnet-beta',
   autoInjectWallets = false,
 }) => {
-  // Auto-inject wallets for testing if enabled
-  useEffect(() => {
-    if (autoInjectWallets && process.env.NODE_ENV === 'development') {
-      const params = new URLSearchParams(window.location.search);
-      if (params.get('inject-wallets') === 'true') {
-        import('@/services/walletInjectionService').then(({ walletInjectionService }) => {
-          walletInjectionService.injectAllWallets({ autoApprove: true });
-          console.log('✅ Mock wallets injected for testing');
-        });
-      }
-    }
-  }, [autoInjectWallets]);
+  // Wallet injection disabled to prevent browser extension conflicts
+  // To enable: uncomment the useEffect below
+  // useEffect(() => {
+  //   if (autoInjectWallets && process.env.NODE_ENV === 'development') {
+  //     const params = new URLSearchParams(window.location.search);
+  //     if (params.get('inject-wallets') === 'true') {
+  //       import('@/services/walletInjectionService').then(({ walletInjectionService }) => {
+  //         walletInjectionService.injectAllWallets({ autoApprove: true });
+  //         console.log('✅ Mock wallets injected for testing');
+  //       });
+  //     }
+  //   }
+  // }, [autoInjectWallets]);
 
   // For now, just render children
   // Full ConnectionProvider/WalletProvider setup requires npm install
