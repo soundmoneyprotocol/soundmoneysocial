@@ -18,7 +18,7 @@ interface AnalyticsData {
   }>;
 }
 
-interface SpotifyStreamEntry {
+interface StreamEntry {
   id: string;
   trackName: string;
   artistName: string;
@@ -48,25 +48,34 @@ const AnalyticsPage: React.FC = () => {
     ],
   });
 
-  const [spotifyStreams, setSpotifyStreams] = React.useState<SpotifyStreamEntry[]>([]);
+  // Spotify State
+  const [spotifyStreams, setSpotifyStreams] = React.useState<StreamEntry[]>([]);
   const [showSpotifyForm, setShowSpotifyForm] = React.useState(false);
-  const [streamInput, setStreamInput] = React.useState({
+  const [spotifyInput, setSpotifyInput] = React.useState({
     trackName: '',
     artistName: '',
     monthlyListens: '',
   });
-  const [conversionRate, setConversionRate] = React.useState('0.00001'); // BZY per listen
+  const [spotifyConversionRate, setSpotifyConversionRate] = React.useState('0.00001');
   const [spotifyLink, setSpotifyLink] = React.useState('');
 
+  // YouTube Music State
+  const [youtubeStreams, setYoutubeStreams] = React.useState<StreamEntry[]>([]);
+  const [showYoutubeForm, setShowYoutubeForm] = React.useState(false);
+  const [youtubeInput, setYoutubeInput] = React.useState({
+    trackName: '',
+    artistName: '',
+    monthlyListens: '',
+  });
+  const [youtubeConversionRate, setYoutubeConversionRate] = React.useState('0.00001');
+  const [youtubeLink, setYoutubeLink] = React.useState('');
 
   // Parse Spotify link and populate form
   const handleSpotifyLinkPaste = (url: string) => {
     setSpotifyLink(url);
-    
-    // Try to extract track ID from Spotify link
-    // Format: https://open.spotify.com/track/{trackId}?si=... or spotify:track:{trackId}
+
     let trackId = '';
-    
+
     if (url.includes('open.spotify.com')) {
       const match = url.match(/track\/([a-zA-Z0-9]+)/);
       trackId = match ? match[1] : '';
@@ -76,7 +85,6 @@ const AnalyticsPage: React.FC = () => {
     }
 
     if (trackId) {
-      // Mock data for common Spotify tracks
       const trackDatabase: Record<string, { name: string; artist: string }> = {
         '11dFghVXANMlKmJXsNCQvb': { name: 'Blinding Lights', artist: 'The Weeknd' },
         '4cOdK2wGLETKBW3PvgPWqLv': { name: 'Bad Guy', artist: 'Billie Eilish' },
@@ -91,15 +99,14 @@ const AnalyticsPage: React.FC = () => {
 
       const trackData = trackDatabase[trackId];
       if (trackData) {
-        setStreamInput(prev => ({
+        setSpotifyInput(prev => ({
           ...prev,
           trackName: trackData.name,
           artistName: trackData.artist,
         }));
       } else {
-        // If not in database, try to extract from URL or ask user
         alert('ℹ️ Track found! Please enter the monthly listening count from your Spotify for Artists dashboard.');
-        setStreamInput(prev => ({
+        setSpotifyInput(prev => ({
           ...prev,
           trackName: 'Track - ' + trackId.substring(0, 8),
           artistName: 'Your Artist Name',
@@ -110,28 +117,74 @@ const AnalyticsPage: React.FC = () => {
     }
   };
 
+  // Parse YouTube Music link and populate form
+  const handleYoutubeLinkPaste = (url: string) => {
+    setYoutubeLink(url);
+
+    let videoId = '';
+
+    if (url.includes('youtube.com')) {
+      const match = url.match(/(?:watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/);
+      videoId = match ? match[1] : '';
+    } else if (url.includes('youtu.be')) {
+      const match = url.match(/youtu\.be\/([a-zA-Z0-9_-]{11})/);
+      videoId = match ? match[1] : '';
+    }
+
+    if (videoId) {
+      const trackDatabase: Record<string, { name: string; artist: string }> = {
+        'dQw4w9WgXcQ': { name: 'Never Gonna Give You Up', artist: 'Rick Astley' },
+        'jNQXAC9IVRw': { name: 'Me at the zoo', artist: 'Jawed Karim' },
+        'aqz-KE-bpKQ': { name: 'YouTube Rewind 2019', artist: 'YouTube' },
+      };
+
+      const trackData = trackDatabase[videoId];
+      if (trackData) {
+        setYoutubeInput(prev => ({
+          ...prev,
+          trackName: trackData.name,
+          artistName: trackData.artist,
+        }));
+      } else {
+        alert('ℹ️ Video found! Please enter the monthly view count from your YouTube Music stats.');
+        setYoutubeInput(prev => ({
+          ...prev,
+          trackName: 'Video - ' + videoId.substring(0, 8),
+          artistName: 'Your Artist Name',
+        }));
+      }
+    } else {
+      alert('❌ Invalid YouTube Music link. Please use: https://www.youtube.com/watch?v=... or https://youtu.be/...');
+    }
+  };
+
   // Load from localStorage
   React.useEffect(() => {
-    const stored = localStorage.getItem('soundmoney_spotify_streams');
-    if (stored) {
-      setSpotifyStreams(JSON.parse(stored));
+    const spotifyStored = localStorage.getItem('soundmoney_spotify_streams');
+    if (spotifyStored) {
+      setSpotifyStreams(JSON.parse(spotifyStored));
+    }
+
+    const youtubeStored = localStorage.getItem('soundmoney_youtube_streams');
+    if (youtubeStored) {
+      setYoutubeStreams(JSON.parse(youtubeStored));
     }
   }, []);
 
   const handleAddSpotifyStreams = () => {
-    if (!streamInput.trackName || !streamInput.artistName || !streamInput.monthlyListens) {
+    if (!spotifyInput.trackName || !spotifyInput.artistName || !spotifyInput.monthlyListens) {
       alert('Please fill in all fields');
       return;
     }
 
-    const listens = parseInt(streamInput.monthlyListens);
-    const rate = parseFloat(conversionRate);
+    const listens = parseInt(spotifyInput.monthlyListens);
+    const rate = parseFloat(spotifyConversionRate);
     const convertedBZY = listens * rate;
 
-    const newEntry: SpotifyStreamEntry = {
+    const newEntry: StreamEntry = {
       id: `spotify_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      trackName: streamInput.trackName,
-      artistName: streamInput.artistName,
+      trackName: spotifyInput.trackName,
+      artistName: spotifyInput.artistName,
       monthlyListens: listens,
       convertedBZY,
       importDate: new Date().toISOString(),
@@ -141,13 +194,45 @@ const AnalyticsPage: React.FC = () => {
     setSpotifyStreams(updated);
     localStorage.setItem('soundmoney_spotify_streams', JSON.stringify(updated));
 
-    setStreamInput({
+    setSpotifyInput({
       trackName: '',
       artistName: '',
       monthlyListens: '',
     });
     setShowSpotifyForm(false);
     alert('✅ Spotify streams imported successfully');
+  };
+
+  const handleAddYoutubeStreams = () => {
+    if (!youtubeInput.trackName || !youtubeInput.artistName || !youtubeInput.monthlyListens) {
+      alert('Please fill in all fields');
+      return;
+    }
+
+    const listens = parseInt(youtubeInput.monthlyListens);
+    const rate = parseFloat(youtubeConversionRate);
+    const convertedBZY = listens * rate;
+
+    const newEntry: StreamEntry = {
+      id: `youtube_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      trackName: youtubeInput.trackName,
+      artistName: youtubeInput.artistName,
+      monthlyListens: listens,
+      convertedBZY,
+      importDate: new Date().toISOString(),
+    };
+
+    const updated = [...youtubeStreams, newEntry];
+    setYoutubeStreams(updated);
+    localStorage.setItem('soundmoney_youtube_streams', JSON.stringify(updated));
+
+    setYoutubeInput({
+      trackName: '',
+      artistName: '',
+      monthlyListens: '',
+    });
+    setShowYoutubeForm(false);
+    alert('✅ YouTube Music streams imported successfully');
   };
 
   const handleDeleteSpotifyEntry = (id: string) => {
@@ -159,8 +244,20 @@ const AnalyticsPage: React.FC = () => {
     }
   };
 
+  const handleDeleteYoutubeEntry = (id: string) => {
+    if (window.confirm('Delete this entry?')) {
+      const updated = youtubeStreams.filter(s => s.id !== id);
+      setYoutubeStreams(updated);
+      localStorage.setItem('soundmoney_youtube_streams', JSON.stringify(updated));
+      alert('🗑️ Entry deleted');
+    }
+  };
+
   const totalSpotifyListens = spotifyStreams.reduce((sum, s) => sum + s.monthlyListens, 0);
-  const totalConvertedBZY = spotifyStreams.reduce((sum, s) => sum + s.convertedBZY, 0);
+  const totalSpotifyBZY = spotifyStreams.reduce((sum, s) => sum + s.convertedBZY, 0);
+
+  const totalYoutubeListens = youtubeStreams.reduce((sum, s) => sum + s.monthlyListens, 0);
+  const totalYoutubeBZY = youtubeStreams.reduce((sum, s) => sum + s.convertedBZY, 0);
 
   const containerStyles: React.CSSProperties = {
     maxWidth: '1200px',
@@ -263,6 +360,402 @@ const AnalyticsPage: React.FC = () => {
     margin: 0,
   };
 
+  const renderStreamCard = (
+    title: string,
+    icon: string,
+    streams: StreamEntry[],
+    totalListens: number,
+    totalBZY: number,
+    conversionRate: string,
+    setConversionRate: (rate: string) => void,
+    showForm: boolean,
+    setShowForm: (show: boolean) => void,
+    input: { trackName: string; artistName: string; monthlyListens: string },
+    setInput: (input: any) => void,
+    link: string,
+    setLink: (link: string) => void,
+    onLinkPaste: (url: string) => void,
+    onAddStreams: () => void,
+    onDeleteEntry: (id: string) => void,
+    platform: string
+  ) => (
+    <Card style={{ marginTop: theme.spacing.lg }}>
+      <h3 style={{ margin: 0, marginBottom: theme.spacing.md, color: theme.colors.text.primary }}>
+        {icon} {title}
+      </h3>
+
+      {/* Stats */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+        gap: theme.spacing.md,
+        marginBottom: theme.spacing.lg,
+      }}>
+        <div style={{
+          padding: theme.spacing.md,
+          backgroundColor: theme.colors.background.tertiary,
+          borderRadius: theme.borderRadius.md,
+        }}>
+          <p style={{ margin: 0, marginBottom: theme.spacing.xs, color: theme.colors.text.secondary, fontSize: theme.typography.fontSize.sm }}>
+            Total Listens
+          </p>
+          <p style={{ margin: 0, fontSize: '24px', fontWeight: 'bold', color: theme.colors.primary }}>
+            {formatNumber(totalListens)}
+          </p>
+        </div>
+
+        <div style={{
+          padding: theme.spacing.md,
+          backgroundColor: theme.colors.background.tertiary,
+          borderRadius: theme.borderRadius.md,
+        }}>
+          <p style={{ margin: 0, marginBottom: theme.spacing.xs, color: theme.colors.text.secondary, fontSize: theme.typography.fontSize.sm }}>
+            Converted BZY
+          </p>
+          <p style={{ margin: 0, fontSize: '24px', fontWeight: 'bold', color: theme.colors.accent }}>
+            {totalBZY.toFixed(6)} BZY
+          </p>
+        </div>
+
+        <div style={{
+          padding: theme.spacing.md,
+          backgroundColor: theme.colors.background.tertiary,
+          borderRadius: theme.borderRadius.md,
+        }}>
+          <p style={{ margin: 0, marginBottom: theme.spacing.xs, color: theme.colors.text.secondary, fontSize: theme.typography.fontSize.sm }}>
+            Conversion Rate
+          </p>
+          <p style={{ margin: 0, fontSize: '16px', fontWeight: 'bold', color: theme.colors.info }}>
+            {conversionRate} BZY/listen
+          </p>
+        </div>
+      </div>
+
+      {/* Action Buttons */}
+      <div style={{ marginBottom: theme.spacing.lg }}>
+        <button
+          onClick={() => {
+            setShowForm(!showForm);
+            if (showForm) {
+              setLink('');
+              setInput({ trackName: '', artistName: '', monthlyListens: '' });
+            }
+          }}
+          style={{
+            padding: `${theme.spacing.sm} ${theme.spacing.md}`,
+            backgroundColor: theme.colors.primary,
+            color: 'white',
+            border: 'none',
+            borderRadius: theme.borderRadius.md,
+            cursor: 'pointer',
+            fontWeight: 600,
+            fontSize: theme.typography.fontSize.base,
+            marginRight: theme.spacing.md,
+            marginBottom: theme.spacing.md,
+          }}
+        >
+          {showForm ? '✕ Cancel' : `➕ Add ${platform} Track`}
+        </button>
+
+        <button
+          onClick={() => {
+            const json = JSON.stringify(streams, null, 2);
+            const element = document.createElement('a');
+            element.setAttribute('href', 'data:text/json;charset=utf-8,' + encodeURIComponent(json));
+            element.setAttribute('download', `${platform.toLowerCase()}-streams-bzy.json`);
+            element.style.display = 'none';
+            document.body.appendChild(element);
+            element.click();
+            document.body.removeChild(element);
+            alert(`📥 ${platform} streams exported`);
+          }}
+          style={{
+            padding: `${theme.spacing.sm} ${theme.spacing.md}`,
+            backgroundColor: theme.colors.gray[700],
+            color: 'white',
+            border: 'none',
+            borderRadius: theme.borderRadius.md,
+            cursor: 'pointer',
+            fontWeight: 600,
+            fontSize: theme.typography.fontSize.base,
+            marginRight: theme.spacing.md,
+            marginBottom: theme.spacing.md,
+          }}
+        >
+          📥 Export Data
+        </button>
+
+        <button
+          onClick={() => {
+            setConversionRate('0.00001');
+            alert('✅ Conversion rate reset to default (0.00001 BZY/listen)');
+          }}
+          style={{
+            padding: `${theme.spacing.sm} ${theme.spacing.md}`,
+            backgroundColor: theme.colors.gray[700],
+            color: 'white',
+            border: 'none',
+            borderRadius: theme.borderRadius.md,
+            cursor: 'pointer',
+            fontWeight: 600,
+            fontSize: theme.typography.fontSize.base,
+            marginBottom: theme.spacing.md,
+          }}
+        >
+          🔄 Reset Rate
+        </button>
+      </div>
+
+      {/* Form */}
+      {showForm && (
+        <div style={{
+          padding: theme.spacing.lg,
+          backgroundColor: theme.colors.background.tertiary,
+          borderRadius: theme.borderRadius.md,
+          marginBottom: theme.spacing.lg,
+        }}>
+          <h4 style={{ margin: 0, marginBottom: theme.spacing.md, color: theme.colors.text.primary }}>
+            ➕ Import Monthly {platform} Streams
+          </h4>
+
+          {/* Link Input */}
+          <div style={{ marginBottom: theme.spacing.lg }}>
+            <label style={{
+              display: 'block',
+              marginBottom: theme.spacing.xs,
+              color: theme.colors.text.secondary,
+              fontSize: theme.typography.fontSize.sm,
+            }}>
+              🔗 Paste {platform} Track Link (Optional - auto-fills track info)
+            </label>
+            <input
+              type="url"
+              value={link}
+              onChange={(e) => setLink(e.target.value)}
+              onBlur={(e) => {
+                if (e.target.value.trim()) {
+                  onLinkPaste(e.target.value);
+                }
+              }}
+              placeholder={platform === 'Spotify' ? 'https://open.spotify.com/track/...' : 'https://www.youtube.com/watch?v=...'}
+              style={{
+                width: '100%',
+                padding: theme.spacing.sm,
+                borderRadius: theme.borderRadius.md,
+                border: `2px solid ${theme.colors.primary}`,
+                backgroundColor: theme.colors.background.secondary,
+                color: theme.colors.text.primary,
+                fontSize: theme.typography.fontSize.base,
+                boxSizing: 'border-box',
+                marginBottom: theme.spacing.sm,
+              }}
+            />
+            <p style={{ margin: 0, color: theme.colors.text.secondary, fontSize: theme.typography.fontSize.xs }}>
+              💡 Paste a {platform} track link to auto-fill track name and artist
+            </p>
+          </div>
+
+          {/* Form Fields */}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+            gap: theme.spacing.md,
+            marginBottom: theme.spacing.md,
+          }}>
+            <div>
+              <label style={{
+                display: 'block',
+                marginBottom: theme.spacing.xs,
+                color: theme.colors.text.secondary,
+                fontSize: theme.typography.fontSize.sm,
+              }}>
+                Track Name *
+              </label>
+              <input
+                type="text"
+                value={input.trackName}
+                onChange={(e) => setInput({ ...input, trackName: e.target.value })}
+                style={{
+                  width: '100%',
+                  padding: theme.spacing.sm,
+                  borderRadius: theme.borderRadius.md,
+                  border: `1px solid ${theme.colors.gray[700]}`,
+                  backgroundColor: theme.colors.background.secondary,
+                  color: theme.colors.text.primary,
+                  fontSize: theme.typography.fontSize.base,
+                  boxSizing: 'border-box',
+                }}
+                placeholder="e.g., Blinding Lights"
+              />
+            </div>
+
+            <div>
+              <label style={{
+                display: 'block',
+                marginBottom: theme.spacing.xs,
+                color: theme.colors.text.secondary,
+                fontSize: theme.typography.fontSize.sm,
+              }}>
+                Artist Name *
+              </label>
+              <input
+                type="text"
+                value={input.artistName}
+                onChange={(e) => setInput({ ...input, artistName: e.target.value })}
+                style={{
+                  width: '100%',
+                  padding: theme.spacing.sm,
+                  borderRadius: theme.borderRadius.md,
+                  border: `1px solid ${theme.colors.gray[700]}`,
+                  backgroundColor: theme.colors.background.secondary,
+                  color: theme.colors.text.primary,
+                  fontSize: theme.typography.fontSize.base,
+                  boxSizing: 'border-box',
+                }}
+                placeholder="e.g., The Weeknd"
+              />
+            </div>
+
+            <div>
+              <label style={{
+                display: 'block',
+                marginBottom: theme.spacing.xs,
+                color: theme.colors.text.secondary,
+                fontSize: theme.typography.fontSize.sm,
+              }}>
+                Monthly Listens *
+              </label>
+              <input
+                type="number"
+                value={input.monthlyListens}
+                onChange={(e) => setInput({ ...input, monthlyListens: e.target.value })}
+                style={{
+                  width: '100%',
+                  padding: theme.spacing.sm,
+                  borderRadius: theme.borderRadius.md,
+                  border: `1px solid ${theme.colors.gray[700]}`,
+                  backgroundColor: theme.colors.background.secondary,
+                  color: theme.colors.text.primary,
+                  fontSize: theme.typography.fontSize.base,
+                  boxSizing: 'border-box',
+                }}
+                placeholder="e.g., 50000"
+              />
+            </div>
+
+            <div>
+              <label style={{
+                display: 'block',
+                marginBottom: theme.spacing.xs,
+                color: theme.colors.text.secondary,
+                fontSize: theme.typography.fontSize.sm,
+              }}>
+                BZY per Listen
+              </label>
+              <input
+                type="number"
+                step="0.000001"
+                value={conversionRate}
+                onChange={(e) => setConversionRate(e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: theme.spacing.sm,
+                  borderRadius: theme.borderRadius.md,
+                  border: `1px solid ${theme.colors.gray[700]}`,
+                  backgroundColor: theme.colors.background.secondary,
+                  color: theme.colors.text.primary,
+                  fontSize: theme.typography.fontSize.base,
+                  boxSizing: 'border-box',
+                }}
+                placeholder="0.00001"
+              />
+            </div>
+          </div>
+
+          <button
+            onClick={onAddStreams}
+            style={{
+              padding: `${theme.spacing.sm} ${theme.spacing.md}`,
+              backgroundColor: theme.colors.primary,
+              color: 'white',
+              border: 'none',
+              borderRadius: theme.borderRadius.md,
+              cursor: 'pointer',
+              fontWeight: 600,
+              fontSize: theme.typography.fontSize.base,
+            }}
+          >
+            ➕ Import Streams
+          </button>
+        </div>
+      )}
+
+      {/* Streams Table */}
+      {streams.length > 0 ? (
+        <div style={{ overflowX: 'auto' }}>
+          <table style={{
+            width: '100%',
+            borderCollapse: 'collapse',
+            color: theme.colors.text.primary,
+          }}>
+            <thead>
+              <tr style={{ borderBottom: `1px solid ${theme.colors.gray[800]}` }}>
+                <th style={{ textAlign: 'left', padding: theme.spacing.md, color: theme.colors.text.secondary }}>Track</th>
+                <th style={{ textAlign: 'left', padding: theme.spacing.md, color: theme.colors.text.secondary }}>Artist</th>
+                <th style={{ textAlign: 'right', padding: theme.spacing.md, color: theme.colors.text.secondary }}>Monthly Listens</th>
+                <th style={{ textAlign: 'right', padding: theme.spacing.md, color: theme.colors.text.secondary }}>Converted BZY</th>
+                <th style={{ textAlign: 'center', padding: theme.spacing.md, color: theme.colors.text.secondary }}>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {streams.map((entry) => (
+                <tr key={entry.id} style={{ borderBottom: `1px solid ${theme.colors.gray[800]}` }}>
+                  <td style={{ padding: theme.spacing.md, color: theme.colors.text.primary }}>
+                    {entry.trackName}
+                  </td>
+                  <td style={{ padding: theme.spacing.md, color: theme.colors.text.secondary }}>
+                    {entry.artistName}
+                  </td>
+                  <td style={{ padding: theme.spacing.md, textAlign: 'right', color: theme.colors.text.secondary }}>
+                    {formatNumber(entry.monthlyListens)}
+                  </td>
+                  <td style={{ padding: theme.spacing.md, textAlign: 'right', color: theme.colors.accent, fontWeight: 600 }}>
+                    {entry.convertedBZY.toFixed(6)} BZY
+                  </td>
+                  <td style={{ padding: theme.spacing.md, textAlign: 'center' }}>
+                    <button
+                      onClick={() => onDeleteEntry(entry.id)}
+                      style={{
+                        padding: `${theme.spacing.xs} ${theme.spacing.md}`,
+                        backgroundColor: '#ef4444',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: theme.borderRadius.md,
+                        cursor: 'pointer',
+                        fontSize: theme.typography.fontSize.sm,
+                      }}
+                    >
+                      🗑️
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ) : (
+        <div style={{ textAlign: 'center', padding: theme.spacing.lg }}>
+          <p style={{ color: theme.colors.text.secondary }}>
+            📊 No {platform} streams imported yet
+          </p>
+          <p style={{ color: theme.colors.text.secondary, fontSize: theme.typography.fontSize.sm }}>
+            Add your monthly {platform} listen data to calculate BZY earnings
+          </p>
+        </div>
+      )}
+    </Card>
+  );
+
   return (
     <Container maxWidth="lg" padding="lg" style={containerStyles}>
       <Header
@@ -331,381 +824,47 @@ const AnalyticsPage: React.FC = () => {
         </div>
       </Card>
 
-      {/* Spotify Streams to BZY Conversion */}
-      <Card style={{ marginTop: theme.spacing.lg }}>
-        <h3 style={{ margin: 0, marginBottom: theme.spacing.md, color: theme.colors.text.primary }}>
-          🎵 Spotify Streams to BZY Converter
-        </h3>
+      {/* Spotify Streams Card */}
+      {renderStreamCard(
+        'Spotify Streams to BZY Converter',
+        '🎵',
+        spotifyStreams,
+        totalSpotifyListens,
+        totalSpotifyBZY,
+        spotifyConversionRate,
+        setSpotifyConversionRate,
+        showSpotifyForm,
+        setShowSpotifyForm,
+        spotifyInput,
+        setSpotifyInput,
+        spotifyLink,
+        setSpotifyLink,
+        handleSpotifyLinkPaste,
+        handleAddSpotifyStreams,
+        handleDeleteSpotifyEntry,
+        'Spotify'
+      )}
 
-        {/* Spotify Stats */}
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-          gap: theme.spacing.md,
-          marginBottom: theme.spacing.lg,
-        }}>
-          <div style={{
-            padding: theme.spacing.md,
-            backgroundColor: theme.colors.background.tertiary,
-            borderRadius: theme.borderRadius.md,
-          }}>
-            <p style={{ margin: 0, marginBottom: theme.spacing.xs, color: theme.colors.text.secondary, fontSize: theme.typography.fontSize.sm }}>
-              Total Spotify Listens
-            </p>
-            <p style={{ margin: 0, fontSize: '24px', fontWeight: 'bold', color: theme.colors.primary }}>
-              {formatNumber(totalSpotifyListens)}
-            </p>
-          </div>
-
-          <div style={{
-            padding: theme.spacing.md,
-            backgroundColor: theme.colors.background.tertiary,
-            borderRadius: theme.borderRadius.md,
-          }}>
-            <p style={{ margin: 0, marginBottom: theme.spacing.xs, color: theme.colors.text.secondary, fontSize: theme.typography.fontSize.sm }}>
-              Converted BZY
-            </p>
-            <p style={{ margin: 0, fontSize: '24px', fontWeight: 'bold', color: theme.colors.accent }}>
-              {totalConvertedBZY.toFixed(6)} BZY
-            </p>
-          </div>
-
-          <div style={{
-            padding: theme.spacing.md,
-            backgroundColor: theme.colors.background.tertiary,
-            borderRadius: theme.borderRadius.md,
-          }}>
-            <p style={{ margin: 0, marginBottom: theme.spacing.xs, color: theme.colors.text.secondary, fontSize: theme.typography.fontSize.sm }}>
-              Conversion Rate
-            </p>
-            <p style={{ margin: 0, fontSize: '16px', fontWeight: 'bold', color: theme.colors.info }}>
-              {conversionRate} BZY/listen
-            </p>
-          </div>
-        </div>
-
-        {/* Action Buttons */}
-        <div style={{ marginBottom: theme.spacing.lg }}>
-          <button
-            onClick={() => {
-              setShowSpotifyForm(!showSpotifyForm);
-              if (showSpotifyForm) {
-                setSpotifyLink('');
-                setStreamInput({ trackName: '', artistName: '', monthlyListens: '' });
-              }
-            }}
-            style={{
-              padding: `${theme.spacing.sm} ${theme.spacing.md}`,
-              backgroundColor: theme.colors.primary,
-              color: 'white',
-              border: 'none',
-              borderRadius: theme.borderRadius.md,
-              cursor: 'pointer',
-              fontWeight: 600,
-              fontSize: theme.typography.fontSize.base,
-              marginRight: theme.spacing.md,
-              marginBottom: theme.spacing.md,
-            }}
-          >
-            {showSpotifyForm ? '✕ Cancel' : '➕ Add Spotify Track'}
-          </button>
-
-          <button
-            onClick={() => {
-              const json = JSON.stringify(spotifyStreams, null, 2);
-              const element = document.createElement('a');
-              element.setAttribute('href', 'data:text/json;charset=utf-8,' + encodeURIComponent(json));
-              element.setAttribute('download', 'spotify-streams-bzy.json');
-              element.style.display = 'none';
-              document.body.appendChild(element);
-              element.click();
-              document.body.removeChild(element);
-              alert('📥 Spotify streams exported');
-            }}
-            style={{
-              padding: `${theme.spacing.sm} ${theme.spacing.md}`,
-              backgroundColor: theme.colors.gray[700],
-              color: 'white',
-              border: 'none',
-              borderRadius: theme.borderRadius.md,
-              cursor: 'pointer',
-              fontWeight: 600,
-              fontSize: theme.typography.fontSize.base,
-              marginRight: theme.spacing.md,
-              marginBottom: theme.spacing.md,
-            }}
-          >
-            📥 Export Data
-          </button>
-
-          <button
-            onClick={() => {
-              setConversionRate('0.00001');
-              alert('✅ Conversion rate reset to default (0.00001 BZY/listen)');
-            }}
-            style={{
-              padding: `${theme.spacing.sm} ${theme.spacing.md}`,
-              backgroundColor: theme.colors.gray[700],
-              color: 'white',
-              border: 'none',
-              borderRadius: theme.borderRadius.md,
-              cursor: 'pointer',
-              fontWeight: 600,
-              fontSize: theme.typography.fontSize.base,
-              marginBottom: theme.spacing.md,
-            }}
-          >
-            🔄 Reset Rate
-          </button>
-        </div>
-
-        {/* Add Spotify Stream Form */}
-        {showSpotifyForm && (
-          <div style={{
-            padding: theme.spacing.lg,
-            backgroundColor: theme.colors.background.tertiary,
-            borderRadius: theme.borderRadius.md,
-            marginBottom: theme.spacing.lg,
-          }}>
-            <h4 style={{ margin: 0, marginBottom: theme.spacing.md, color: theme.colors.text.primary }}>
-              ➕ Import Monthly Spotify Streams
-            </h4>
-
-            {/* Spotify Link Input */}
-            <div style={{ marginBottom: theme.spacing.lg }}>
-              <label style={{
-                display: 'block',
-                marginBottom: theme.spacing.xs,
-                color: theme.colors.text.secondary,
-                fontSize: theme.typography.fontSize.sm,
-              }}>
-                🔗 Paste Spotify Track Link (Optional - auto-fills track info)
-              </label>
-              <input
-                type="url"
-                value={spotifyLink}
-                onChange={(e) => setSpotifyLink(e.target.value)}
-                onBlur={(e) => {
-                  if (e.target.value.trim()) {
-                    handleSpotifyLinkPaste(e.target.value);
-                  }
-                }}
-                placeholder="https://open.spotify.com/track/... or spotify:track:..."
-                style={{
-                  width: '100%',
-                  padding: theme.spacing.sm,
-                  borderRadius: theme.borderRadius.md,
-                  border: `2px solid ${theme.colors.primary}`,
-                  backgroundColor: theme.colors.background.secondary,
-                  color: theme.colors.text.primary,
-                  fontSize: theme.typography.fontSize.base,
-                  boxSizing: 'border-box',
-                  marginBottom: theme.spacing.sm,
-                }}
-              />
-              <p style={{ margin: 0, color: theme.colors.text.secondary, fontSize: theme.typography.fontSize.xs }}>
-                💡 Paste a Spotify track link to auto-fill track name and artist
-              </p>
-            </div>
-
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-              gap: theme.spacing.md,
-              marginBottom: theme.spacing.md,
-            }}>
-              <div>
-                <label style={{
-                  display: 'block',
-                  marginBottom: theme.spacing.xs,
-                  color: theme.colors.text.secondary,
-                  fontSize: theme.typography.fontSize.sm,
-                }}>
-                  Track Name *
-                </label>
-                <input
-                  type="text"
-                  value={streamInput.trackName}
-                  onChange={(e) => setStreamInput({ ...streamInput, trackName: e.target.value })}
-                  style={{
-                    width: '100%',
-                    padding: theme.spacing.sm,
-                    borderRadius: theme.borderRadius.md,
-                    border: `1px solid ${theme.colors.gray[700]}`,
-                    backgroundColor: theme.colors.background.secondary,
-                    color: theme.colors.text.primary,
-                    fontSize: theme.typography.fontSize.base,
-                    boxSizing: 'border-box',
-                  }}
-                  placeholder="e.g., Blinding Lights"
-                />
-              </div>
-
-              <div>
-                <label style={{
-                  display: 'block',
-                  marginBottom: theme.spacing.xs,
-                  color: theme.colors.text.secondary,
-                  fontSize: theme.typography.fontSize.sm,
-                }}>
-                  Artist Name *
-                </label>
-                <input
-                  type="text"
-                  value={streamInput.artistName}
-                  onChange={(e) => setStreamInput({ ...streamInput, artistName: e.target.value })}
-                  style={{
-                    width: '100%',
-                    padding: theme.spacing.sm,
-                    borderRadius: theme.borderRadius.md,
-                    border: `1px solid ${theme.colors.gray[700]}`,
-                    backgroundColor: theme.colors.background.secondary,
-                    color: theme.colors.text.primary,
-                    fontSize: theme.typography.fontSize.base,
-                    boxSizing: 'border-box',
-                  }}
-                  placeholder="e.g., The Weeknd"
-                />
-              </div>
-
-              <div>
-                <label style={{
-                  display: 'block',
-                  marginBottom: theme.spacing.xs,
-                  color: theme.colors.text.secondary,
-                  fontSize: theme.typography.fontSize.sm,
-                }}>
-                  Monthly Listens *
-                </label>
-                <input
-                  type="number"
-                  value={streamInput.monthlyListens}
-                  onChange={(e) => setStreamInput({ ...streamInput, monthlyListens: e.target.value })}
-                  style={{
-                    width: '100%',
-                    padding: theme.spacing.sm,
-                    borderRadius: theme.borderRadius.md,
-                    border: `1px solid ${theme.colors.gray[700]}`,
-                    backgroundColor: theme.colors.background.secondary,
-                    color: theme.colors.text.primary,
-                    fontSize: theme.typography.fontSize.base,
-                    boxSizing: 'border-box',
-                  }}
-                  placeholder="e.g., 50000"
-                />
-              </div>
-
-              <div>
-                <label style={{
-                  display: 'block',
-                  marginBottom: theme.spacing.xs,
-                  color: theme.colors.text.secondary,
-                  fontSize: theme.typography.fontSize.sm,
-                }}>
-                  BZY per Listen
-                </label>
-                <input
-                  type="number"
-                  step="0.000001"
-                  value={conversionRate}
-                  onChange={(e) => setConversionRate(e.target.value)}
-                  style={{
-                    width: '100%',
-                    padding: theme.spacing.sm,
-                    borderRadius: theme.borderRadius.md,
-                    border: `1px solid ${theme.colors.gray[700]}`,
-                    backgroundColor: theme.colors.background.secondary,
-                    color: theme.colors.text.primary,
-                    fontSize: theme.typography.fontSize.base,
-                    boxSizing: 'border-box',
-                  }}
-                  placeholder="0.00001"
-                />
-              </div>
-            </div>
-
-            <button
-              onClick={handleAddSpotifyStreams}
-              style={{
-                padding: `${theme.spacing.sm} ${theme.spacing.md}`,
-                backgroundColor: theme.colors.primary,
-                color: 'white',
-                border: 'none',
-                borderRadius: theme.borderRadius.md,
-                cursor: 'pointer',
-                fontWeight: 600,
-                fontSize: theme.typography.fontSize.base,
-              }}
-            >
-              ➕ Import Streams
-            </button>
-          </div>
-        )}
-
-        {/* Spotify Streams List */}
-        {spotifyStreams.length > 0 ? (
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{
-              width: '100%',
-              borderCollapse: 'collapse',
-              color: theme.colors.text.primary,
-            }}>
-              <thead>
-                <tr style={{ borderBottom: `1px solid ${theme.colors.gray[800]}` }}>
-                  <th style={{ textAlign: 'left', padding: theme.spacing.md, color: theme.colors.text.secondary }}>Track</th>
-                  <th style={{ textAlign: 'left', padding: theme.spacing.md, color: theme.colors.text.secondary }}>Artist</th>
-                  <th style={{ textAlign: 'right', padding: theme.spacing.md, color: theme.colors.text.secondary }}>Monthly Listens</th>
-                  <th style={{ textAlign: 'right', padding: theme.spacing.md, color: theme.colors.text.secondary }}>Converted BZY</th>
-                  <th style={{ textAlign: 'center', padding: theme.spacing.md, color: theme.colors.text.secondary }}>Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                {spotifyStreams.map((entry) => (
-                  <tr key={entry.id} style={{ borderBottom: `1px solid ${theme.colors.gray[800]}` }}>
-                    <td style={{ padding: theme.spacing.md, color: theme.colors.text.primary }}>
-                      {entry.trackName}
-                    </td>
-                    <td style={{ padding: theme.spacing.md, color: theme.colors.text.secondary }}>
-                      {entry.artistName}
-                    </td>
-                    <td style={{ padding: theme.spacing.md, textAlign: 'right', color: theme.colors.text.secondary }}>
-                      {formatNumber(entry.monthlyListens)}
-                    </td>
-                    <td style={{ padding: theme.spacing.md, textAlign: 'right', color: theme.colors.accent, fontWeight: 600 }}>
-                      {entry.convertedBZY.toFixed(6)} BZY
-                    </td>
-                    <td style={{ padding: theme.spacing.md, textAlign: 'center' }}>
-                      <button
-                        onClick={() => handleDeleteSpotifyEntry(entry.id)}
-                        style={{
-                          padding: `${theme.spacing.xs} ${theme.spacing.md}`,
-                          backgroundColor: '#ef4444',
-                          color: 'white',
-                          border: 'none',
-                          borderRadius: theme.borderRadius.md,
-                          cursor: 'pointer',
-                          fontSize: theme.typography.fontSize.sm,
-                        }}
-                      >
-                        🗑️
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        ) : (
-          <div style={{ textAlign: 'center', padding: theme.spacing.lg }}>
-            <p style={{ color: theme.colors.text.secondary }}>
-              📊 No Spotify streams imported yet
-            </p>
-            <p style={{ color: theme.colors.text.secondary, fontSize: theme.typography.fontSize.sm }}>
-              Add your monthly Spotify listen data to calculate BZY earnings
-            </p>
-          </div>
-        )}
-      </Card>
+      {/* YouTube Music Streams Card */}
+      {renderStreamCard(
+        'YouTube Music Streams to BZY Converter',
+        '▶️',
+        youtubeStreams,
+        totalYoutubeListens,
+        totalYoutubeBZY,
+        youtubeConversionRate,
+        setYoutubeConversionRate,
+        showYoutubeForm,
+        setShowYoutubeForm,
+        youtubeInput,
+        setYoutubeInput,
+        youtubeLink,
+        setYoutubeLink,
+        handleYoutubeLinkPaste,
+        handleAddYoutubeStreams,
+        handleDeleteYoutubeEntry,
+        'YouTube Music'
+      )}
     </Container>
   );
 };
