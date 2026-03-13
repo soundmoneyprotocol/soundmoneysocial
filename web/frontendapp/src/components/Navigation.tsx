@@ -335,6 +335,7 @@ const Navigation: React.FC = () => {
       <SubscriptionModal
         isOpen={showSubscriptionModal}
         onClose={() => setShowSubscriptionModal(false)}
+        onNavigateToTeam={() => navigate('/team')}
       />
     </>
   );

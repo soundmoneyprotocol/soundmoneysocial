@@ -7,6 +7,7 @@ import { theme } from '../theme/theme';
 interface SubscriptionModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onNavigateToTeam?: () => void;
 }
 
 type SubscriptionTab = 'plans' | 'dashboard' | 'team' | 'referrals';
@@ -23,6 +24,7 @@ interface Plan {
 export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
   isOpen,
   onClose,
+  onNavigateToTeam,
 }) => {
   const [activeTab, setActiveTab] = useState<SubscriptionTab>('plans');
   const [referralCode, setReferralCode] = useState('REF-' + Math.random().toString(36).substr(2, 9).toUpperCase());
@@ -93,8 +95,17 @@ export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
       alert('You are already on this plan');
       return;
     }
-    alert(`✅ Upgraded to ${plans.find(p => p.id === planId)?.name}!`);
+    const planName = plans.find(p => p.id === planId)?.name;
+    alert(`✅ Upgraded to ${planName}!`);
     setCurrentPlan(planId);
+    
+    // Navigate to Team page if upgrading to Team/Label plan
+    if (planId === 'team' && onNavigateToTeam) {
+      setTimeout(() => {
+        onClose();
+        onNavigateToTeam();
+      }, 500);
+    }
   };
 
   if (!isOpen) return null;
