@@ -32,13 +32,109 @@ interface OwnedTicket {
   status: 'valid' | 'used' | 'expired';
 }
 
+interface TicketingIntegration {
+  id: string;
+  name: string;
+  description: string;
+  icon: string;
+  connected: boolean;
+  features: string[];
+  connectionUrl?: string;
+}
+
 const TicketsPage: React.FC = () => {
   const navigate = useNavigate();
-  const [selectedTab, setSelectedTab] = useState<'upcoming' | 'recommended' | 'owned'>('upcoming');
+  const [selectedTab, setSelectedTab] = useState<'upcoming' | 'recommended' | 'owned' | 'integrations'>('upcoming');
   const [showCheckoutModal, setShowCheckoutModal] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [ticketQuantity, setTicketQuantity] = useState(1);
   const [searchQuery, setSearchQuery] = useState('');
+  const [integrationStatuses, setIntegrationStatuses] = useState<Record<string, boolean>>({
+    ticketmaster: false,
+    tickettailor: false,
+    prototix: false,
+    eventbookings: false,
+    futureticketing: false,
+  });
+  const [showIntegrationModal, setShowIntegrationModal] = useState<string | null>(null);
+
+  const ticketingIntegrations: TicketingIntegration[] = [
+    {
+      id: 'ticketmaster',
+      name: 'Ticketmaster',
+      description: 'Large-scale event discovery and enterprise ticketing.',
+      icon: '🎫',
+      connected: integrationStatuses.ticketmaster,
+      features: [
+        'Event discovery across all major venues',
+        'Real-time ticket availability',
+        'Enterprise-grade ticketing',
+        'Global event network',
+        'Advanced analytics',
+      ],
+      connectionUrl: 'https://developer.ticketmaster.com',
+    },
+    {
+      id: 'tickettailor',
+      name: 'Ticket Tailor',
+      description: 'Flexible, developer-friendly API for various event types.',
+      icon: '🎪',
+      connected: integrationStatuses.tickettailor,
+      features: [
+        'Developer-friendly REST API',
+        'Custom event workflows',
+        'Flexible ticket types',
+        'Multi-currency support',
+        'Webhook integrations',
+      ],
+      connectionUrl: 'https://www.tickettailor.com/api',
+    },
+    {
+      id: 'prototix',
+      name: 'PromoTix',
+      description: 'High-volume enterprise-level bulk event and order creation.',
+      icon: '📊',
+      connected: integrationStatuses.prototix,
+      features: [
+        'Bulk event creation',
+        'High-volume processing',
+        'Enterprise support',
+        'Batch order management',
+        'Custom integrations',
+      ],
+      connectionUrl: 'https://www.prototix.com/api',
+    },
+    {
+      id: 'eventbookings',
+      name: 'EventBookings',
+      description: 'End-to-end ticketing, reporting, and payment gateway integration.',
+      icon: '💳',
+      connected: integrationStatuses.eventbookings,
+      features: [
+        'Complete ticketing solution',
+        'Advanced reporting suite',
+        'Multiple payment gateways',
+        'Real-time analytics',
+        'Customer management',
+      ],
+      connectionUrl: 'https://www.eventbookings.com/api',
+    },
+    {
+      id: 'futureticketing',
+      name: 'Future Ticketing',
+      description: '"API-first" approach for custom, fully integrated buying journeys.',
+      icon: '🚀',
+      connected: integrationStatuses.futureticketing,
+      features: [
+        'API-first architecture',
+        'Custom integration builder',
+        'White-label solutions',
+        'Real-time synchronization',
+        'Advanced automation',
+      ],
+      connectionUrl: 'https://www.futureticketing.com/api',
+    },
+  ];
 
   const recommendedEvents: Event[] = [
     {
@@ -161,6 +257,25 @@ const TicketsPage: React.FC = () => {
     setShowCheckoutModal(false);
   };
 
+  const handleConnectIntegration = (integrationId: string) => {
+    setIntegrationStatuses(prev => ({
+      ...prev,
+      [integrationId]: true,
+    }));
+    alert(`✅ ${ticketingIntegrations.find(i => i.id === integrationId)?.name} connected successfully!`);
+    setShowIntegrationModal(null);
+  };
+
+  const handleDisconnectIntegration = (integrationId: string) => {
+    if (window.confirm('Are you sure you want to disconnect this integration?')) {
+      setIntegrationStatuses(prev => ({
+        ...prev,
+        [integrationId]: false,
+      }));
+      alert(`🔌 Integration disconnected`);
+    }
+  };
+
   const eventCardStyles: React.CSSProperties = {
     marginBottom: theme.spacing.md,
     overflow: 'hidden',
@@ -240,6 +355,7 @@ const TicketsPage: React.FC = () => {
         marginBottom: theme.spacing.lg,
         borderBottom: `1px solid ${theme.colors.gray[800]}`,
         paddingBottom: theme.spacing.md,
+        flexWrap: 'wrap',
       }}>
         <button
           onClick={() => setSelectedTab('upcoming')}
@@ -289,10 +405,26 @@ const TicketsPage: React.FC = () => {
         >
           🎫 My Tickets ({ownedTickets.length})
         </button>
+        <button
+          onClick={() => setSelectedTab('integrations')}
+          style={{
+            padding: `${theme.spacing.sm} ${theme.spacing.md}`,
+            backgroundColor: selectedTab === 'integrations' ? theme.colors.primary : 'transparent',
+            color: selectedTab === 'integrations' ? 'white' : theme.colors.text.secondary,
+            border: 'none',
+            borderRadius: theme.borderRadius.md,
+            cursor: 'pointer',
+            fontWeight: 600,
+            fontSize: theme.typography.fontSize.base,
+            transition: 'all 0.2s ease',
+          }}
+        >
+          🔌 Integrations
+        </button>
       </div>
 
       {/* Search Bar */}
-      {selectedTab !== 'owned' && (
+      {selectedTab !== 'owned' && selectedTab !== 'integrations' && (
         <div style={{ marginBottom: theme.spacing.lg }}>
           <input
             type="text"
@@ -314,7 +446,7 @@ const TicketsPage: React.FC = () => {
       )}
 
       {/* Events Grid */}
-      {selectedTab !== 'owned' ? (
+      {selectedTab !== 'owned' && selectedTab !== 'integrations' ? (
         <div style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
@@ -383,7 +515,7 @@ const TicketsPage: React.FC = () => {
             </Card>
           )}
         </div>
-      ) : (
+      ) : selectedTab === 'owned' ? (
         /* My Tickets Section */
         <div>
           {ownedTickets.length > 0 ? (
@@ -493,6 +625,129 @@ const TicketsPage: React.FC = () => {
               </Button>
             </Card>
           )}
+        </div>
+      ) : (
+        /* Integrations Section */
+        <div>
+          <div style={{ marginBottom: theme.spacing.lg }}>
+            <p style={{ color: theme.colors.text.secondary, marginBottom: theme.spacing.lg }}>
+              Connect your ticketing platform integrations to streamline event management across SoundMoney.
+            </p>
+          </div>
+
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
+            gap: theme.spacing.lg,
+          }}>
+            {ticketingIntegrations.map((integration) => (
+              <Card key={integration.id} style={{ padding: theme.spacing.lg }}>
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  marginBottom: theme.spacing.md,
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: theme.spacing.md }}>
+                    <div style={{ fontSize: '40px' }}>{integration.icon}</div>
+                    <div>
+                      <h4 style={{
+                        margin: 0,
+                        marginBottom: theme.spacing.xs,
+                        color: theme.colors.text.primary,
+                        fontSize: theme.typography.fontSize.lg,
+                      }}>
+                        {integration.name}
+                      </h4>
+                      <Badge variant={integration.connected ? 'success' : 'default'} size="sm">
+                        {integration.connected ? '✓ Connected' : '◯ Not Connected'}
+                      </Badge>
+                    </div>
+                  </div>
+                </div>
+
+                <p style={{
+                  margin: 0,
+                  marginBottom: theme.spacing.md,
+                  color: theme.colors.text.secondary,
+                  fontSize: theme.typography.fontSize.sm,
+                }}>
+                  {integration.description}
+                </p>
+
+                <div style={{
+                  marginBottom: theme.spacing.lg,
+                  paddingBottom: theme.spacing.lg,
+                  borderBottom: `1px solid ${theme.colors.gray[800]}`,
+                }}>
+                  <p style={{
+                    margin: '0 0 8px 0',
+                    color: theme.colors.text.secondary,
+                    fontSize: theme.typography.fontSize.xs,
+                    fontWeight: 600,
+                    textTransform: 'uppercase',
+                  }}>
+                    Features:
+                  </p>
+                  <ul style={{
+                    margin: 0,
+                    padding: '0 0 0 20px',
+                    listStyle: 'none',
+                  }}>
+                    {integration.features.map((feature, idx) => (
+                      <li
+                        key={idx}
+                        style={{
+                          color: theme.colors.text.secondary,
+                          fontSize: theme.typography.fontSize.xs,
+                          marginBottom: '4px',
+                          paddingLeft: '0',
+                          listStyleType: 'disc',
+                          listStylePosition: 'outside',
+                        }}
+                      >
+                        {feature}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                <div style={{ display: 'flex', gap: theme.spacing.md }}>
+                  {integration.connected ? (
+                    <>
+                      <Button
+                        variant="secondary"
+                        onClick={() => setShowIntegrationModal(integration.id)}
+                        style={{ flex: 1, fontSize: theme.typography.fontSize.sm }}
+                      >
+                        ⚙️ Settings
+                      </Button>
+                      <Button
+                        variant="secondary"
+                        onClick={() => handleDisconnectIntegration(integration.id)}
+                        style={{
+                          flex: 1,
+                          fontSize: theme.typography.fontSize.sm,
+                          backgroundColor: theme.colors.danger,
+                          color: 'white',
+                        }}
+                      >
+                        🔌 Disconnect
+                      </Button>
+                    </>
+                  ) : (
+                    <Button
+                      variant="primary"
+                      onClick={() => setShowIntegrationModal(integration.id)}
+                      style={{ width: '100%' }}
+                    >
+                      🔗 Connect Now
+                    </Button>
+                  )}
+                </div>
+              </Card>
+            ))}
+          </div>
         </div>
       )}
 
@@ -606,6 +861,145 @@ const TicketsPage: React.FC = () => {
                 💳 Pay with Stripe/Privy
               </Button>
             </div>
+          </Card>
+        </div>
+      )}
+
+      {/* Integration Details Modal */}
+      {showIntegrationModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.7)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1001,
+        }}
+        onClick={() => setShowIntegrationModal(null)}
+        >
+          <Card style={{
+            padding: theme.spacing.lg,
+            maxWidth: '500px',
+            width: '90%',
+            maxHeight: '80vh',
+            overflowY: 'auto',
+          }}
+          onClick={(e) => e.stopPropagation()}
+          >
+            {ticketingIntegrations.find(i => i.id === showIntegrationModal) && (
+              <>
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: theme.spacing.md,
+                  marginBottom: theme.spacing.lg,
+                }}>
+                  <div style={{ fontSize: '48px' }}>
+                    {ticketingIntegrations.find(i => i.id === showIntegrationModal)?.icon}
+                  </div>
+                  <div>
+                    <h3 style={{ margin: 0, color: theme.colors.text.primary }}>
+                      {ticketingIntegrations.find(i => i.id === showIntegrationModal)?.name}
+                    </h3>
+                    <p style={{ margin: 0, color: theme.colors.text.secondary, fontSize: theme.typography.fontSize.sm }}>
+                      {ticketingIntegrations.find(i => i.id === showIntegrationModal)?.description}
+                    </p>
+                  </div>
+                </div>
+
+                <div style={{
+                  padding: theme.spacing.md,
+                  backgroundColor: theme.colors.background.tertiary,
+                  borderRadius: theme.borderRadius.md,
+                  marginBottom: theme.spacing.lg,
+                }}>
+                  <h4 style={{ margin: 0, marginBottom: theme.spacing.md, color: theme.colors.text.primary }}>
+                    📋 Integration Steps
+                  </h4>
+                  <ol style={{
+                    margin: 0,
+                    paddingLeft: '20px',
+                    color: theme.colors.text.secondary,
+                    fontSize: theme.typography.fontSize.sm,
+                  }}>
+                    <li style={{ marginBottom: '8px' }}>
+                      Create or log in to your {ticketingIntegrations.find(i => i.id === showIntegrationModal)?.name} account
+                    </li>
+                    <li style={{ marginBottom: '8px' }}>
+                      Go to API settings and generate your API credentials
+                    </li>
+                    <li style={{ marginBottom: '8px' }}>
+                      Copy your API key and paste it below
+                    </li>
+                    <li>Click "Verify & Connect" to complete the integration</li>
+                  </ol>
+                </div>
+
+                <div style={{ marginBottom: theme.spacing.lg }}>
+                  <label style={{
+                    display: 'block',
+                    marginBottom: theme.spacing.sm,
+                    color: theme.colors.text.secondary,
+                    fontSize: theme.typography.fontSize.sm,
+                    fontWeight: 600,
+                  }}>
+                    API Key / Connection Token
+                  </label>
+                  <input
+                    type="password"
+                    placeholder="Paste your API key here..."
+                    style={{
+                      width: '100%',
+                      padding: theme.spacing.md,
+                      borderRadius: theme.borderRadius.md,
+                      border: `1px solid ${theme.colors.gray[700]}`,
+                      backgroundColor: theme.colors.background.secondary,
+                      color: theme.colors.text.primary,
+                      fontSize: theme.typography.fontSize.base,
+                      boxSizing: 'border-box',
+                      fontFamily: 'monospace',
+                    }}
+                  />
+                </div>
+
+                <div style={{
+                  padding: theme.spacing.md,
+                  backgroundColor: theme.colors.background.secondary,
+                  borderRadius: theme.borderRadius.md,
+                  marginBottom: theme.spacing.lg,
+                  border: `1px solid ${theme.colors.gray[800]}`,
+                }}>
+                  <p style={{
+                    margin: 0,
+                    color: theme.colors.text.secondary,
+                    fontSize: theme.typography.fontSize.xs,
+                  }}>
+                    💡 Need help? Visit the <a href={ticketingIntegrations.find(i => i.id === showIntegrationModal)?.connectionUrl} target="_blank" rel="noopener noreferrer" style={{ color: theme.colors.primary }}>API documentation</a>
+                  </p>
+                </div>
+
+                <div style={{ display: 'flex', gap: theme.spacing.md }}>
+                  <Button
+                    variant="secondary"
+                    onClick={() => setShowIntegrationModal(null)}
+                    style={{ flex: 1 }}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    variant="primary"
+                    onClick={() => handleConnectIntegration(showIntegrationModal)}
+                    style={{ flex: 1 }}
+                  >
+                    ✓ Verify & Connect
+                  </Button>
+                </div>
+              </>
+            )}
           </Card>
         </div>
       )}
