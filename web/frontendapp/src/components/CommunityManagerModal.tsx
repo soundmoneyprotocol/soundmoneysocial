@@ -68,7 +68,52 @@ interface QuestSubmission {
   };
 }
 
-type TabType = 'messaging' | 'social' | 'web3' | 'email_marketing' | 'campaign';
+
+interface AdCampaign {
+  id: string;
+  title: string;
+  description: string;
+  platform: 'google_ads' | 'chatgpt' | 'aeo';
+  budget: number;
+  currencyType: 'usd' | 'bzy';
+  targetAudience: string;
+  keywords: string[];
+  geoTargeting: string[];
+  status: 'active' | 'paused' | 'completed';
+  performance: {
+    impressions: number;
+    clicks: number;
+    conversions: number;
+    ctr: number;
+    cpc: number;
+  };
+  createdAt: string;
+  startDate?: string;
+  endDate?: string;
+}
+
+interface SEOMetrics {
+  id: string;
+  campaignId: string;
+  keyword: string;
+  ranking: number;
+  volume: number;
+  difficulty: number;
+  trend: 'up' | 'down' | 'stable';
+  lastUpdated: string;
+}
+
+interface GEOData {
+  country: string;
+  region: string;
+  impressions: number;
+  clicks: number;
+  conversions: number;
+  costPerClick: number;
+}
+
+
+type TabType = 'messaging' | 'social' | 'web3' | 'email_marketing' | 'campaign' | 'ads';
 
 export const CommunityManagerModal: React.FC<CommunityManagerModalProps> = ({ visible, onClose }) => {
   const [selectedTab, setSelectedTab] = useState<TabType>('messaging');
@@ -119,6 +164,29 @@ export const CommunityManagerModal: React.FC<CommunityManagerModalProps> = ({ vi
     requirements: [] as string[],
     requirementInput: '',
   });
+
+
+  // Ads Management States
+  const [adCampaigns, setAdCampaigns] = useState<AdCampaign[]>([]);
+  const [seoMetrics, setSEOMetrics] = useState<SEOMetrics[]>([]);
+  const [geoData, setGeoData] = useState<GEOData[]>([]);
+  const [showCreateAdModal, setShowCreateAdModal] = useState(false);
+  const [selectedAdCampaign, setSelectedAdCampaign] = useState<string | null>(null);
+  const [adForm, setAdForm] = useState({
+    title: '',
+    description: '',
+    platform: 'google_ads' as const,
+    budget: 100,
+    currencyType: 'usd' as const,
+    targetAudience: '',
+    keywords: [] as string[],
+    geoTargeting: [] as string[],
+    keywordInput: '',
+    geoInput: '',
+    startDate: '',
+    endDate: '',
+  });
+
 
   const [quests, setQuests] = useState<Quest[]>([]);
   const [questSubmissions, setQuestSubmissions] = useState<QuestSubmission[]>([]);
@@ -243,6 +311,103 @@ export const CommunityManagerModal: React.FC<CommunityManagerModalProps> = ({ vi
     ));
     alert('❌ Submission rejected.');
   };
+
+  const handleCreateAdCampaign = () => {
+    if (!adForm.title || !adForm.description || adForm.budget <= 0) {
+      alert('Please fill in all required fields');
+      return;
+    }
+
+    const newCampaign: AdCampaign = {
+      id: `ad_${Date.now()}`,
+      title: adForm.title,
+      description: adForm.description,
+      platform: adForm.platform,
+      budget: adForm.budget,
+      currencyType: adForm.currencyType,
+      targetAudience: adForm.targetAudience,
+      keywords: adForm.keywords,
+      geoTargeting: adForm.geoTargeting,
+      status: 'active',
+      performance: {
+        impressions: Math.floor(Math.random() * 10000),
+        clicks: Math.floor(Math.random() * 500),
+        conversions: Math.floor(Math.random() * 50),
+        ctr: Math.random() * 5,
+        cpc: Math.random() * 2,
+      },
+      createdAt: new Date().toISOString(),
+      startDate: adForm.startDate,
+      endDate: adForm.endDate,
+    };
+
+    setAdCampaigns([...adCampaigns, newCampaign]);
+    setAdForm({
+      title: '',
+      description: '',
+      platform: 'google_ads',
+      budget: 100,
+      currencyType: 'usd',
+      targetAudience: '',
+      keywords: [],
+      geoTargeting: [],
+      keywordInput: '',
+      geoInput: '',
+      startDate: '',
+      endDate: '',
+    });
+    setShowCreateAdModal(false);
+    alert('✅ Ad campaign created! Monitor performance metrics in real-time.');
+  };
+
+  const handleAddKeyword = () => {
+    if (adForm.keywordInput.trim()) {
+      setAdForm({
+        ...adForm,
+        keywords: [...adForm.keywords, adForm.keywordInput],
+        keywordInput: '',
+      });
+    }
+  };
+
+  const handleRemoveKeyword = (index: number) => {
+    setAdForm({
+      ...adForm,
+      keywords: adForm.keywords.filter((_, i) => i !== index),
+    });
+  };
+
+  const handleAddGeoTarget = () => {
+    if (adForm.geoInput.trim()) {
+      setAdForm({
+        ...adForm,
+        geoTargeting: [...adForm.geoTargeting, adForm.geoInput],
+        geoInput: '',
+      });
+    }
+  };
+
+  const handleRemoveGeoTarget = (index: number) => {
+    setAdForm({
+      ...adForm,
+      geoTargeting: adForm.geoTargeting.filter((_, i) => i !== index),
+    });
+  };
+
+  const handlePauseAdCampaign = (campaignId: string) => {
+    setAdCampaigns(adCampaigns.map(c => 
+      c.id === campaignId ? { ...c, status: 'paused' as const } : c
+    ));
+    alert('⏸️ Campaign paused');
+  };
+
+  const handleResumeAdCampaign = (campaignId: string) => {
+    setAdCampaigns(adCampaigns.map(c => 
+      c.id === campaignId ? { ...c, status: 'active' as const } : c
+    ));
+    alert('▶️ Campaign resumed');
+  };
+
 
 
   const platforms: PlatformIntegration[] = [
@@ -498,7 +663,7 @@ export const CommunityManagerModal: React.FC<CommunityManagerModalProps> = ({ vi
             flexWrap: 'wrap',
           }}
         >
-          {(['messaging', 'social', 'web3', 'email_marketing', 'campaign'] as const).map(tab => (
+          {(['messaging', 'social', 'web3', 'email_marketing', 'campaign', 'ads'] as const).map(tab => (
             <button
               key={tab}
               onClick={() => setSelectedTab(tab)}
@@ -520,6 +685,7 @@ export const CommunityManagerModal: React.FC<CommunityManagerModalProps> = ({ vi
               {tab === 'web3' && '🔗 Web3'}
               {tab === 'email_marketing' && '📧 Email & Marketing'}
               {tab === 'campaign' && '🎯 Campaigns'}
+              {tab === 'ads' && '📊 Ads'}
             </button>
           ))}
         </div>
@@ -961,6 +1127,144 @@ export const CommunityManagerModal: React.FC<CommunityManagerModalProps> = ({ vi
                 ) : (
                   <div style={{ padding: theme.spacing.lg, textAlign: 'center', backgroundColor: theme.colors.background.secondary, borderRadius: theme.borderRadius.md, border: `1px dashed ${theme.colors.gray[800]}`, color: theme.colors.text.secondary }}>
                     No active quests yet. Create one to activate your Social Agents!
+                  </div>
+                )}
+              </div>
+            </div>
+          ) : selectedTab === 'ads' ? (
+            // Ads Manager & SEO Tracking
+            <div style={{ display: 'flex', flexDirection: 'column', gap: theme.spacing.lg }}>
+              {/* Ads Dashboard Stats */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: theme.spacing.md }}>
+                <div style={{ padding: theme.spacing.lg, backgroundColor: theme.colors.background.secondary, borderRadius: theme.borderRadius.md, border: `2px solid ${theme.colors.primary}` }}>
+                  <p style={{ margin: 0, color: theme.colors.text.secondary, fontSize: theme.typography.fontSize.sm }}>📊 Active Campaigns</p>
+                  <p style={{ margin: '8px 0 0 0', fontSize: '28px', fontWeight: 'bold', color: theme.colors.primary }}>{adCampaigns.filter(c => c.status === 'active').length}</p>
+                </div>
+                <div style={{ padding: theme.spacing.lg, backgroundColor: theme.colors.background.secondary, borderRadius: theme.borderRadius.md, border: `2px solid ${theme.colors.accent}` }}>
+                  <p style={{ margin: 0, color: theme.colors.text.secondary, fontSize: theme.typography.fontSize.sm }}>👁️ Total Impressions</p>
+                  <p style={{ margin: '8px 0 0 0', fontSize: '28px', fontWeight: 'bold', color: theme.colors.accent }}>{adCampaigns.reduce((sum, c) => sum + c.performance.impressions, 0).toLocaleString()}</p>
+                </div>
+                <div style={{ padding: theme.spacing.lg, backgroundColor: theme.colors.background.secondary, borderRadius: theme.borderRadius.md, border: `2px solid ${theme.colors.success}` }}>
+                  <p style={{ margin: 0, color: theme.colors.text.secondary, fontSize: theme.typography.fontSize.sm }}>🎯 Total Clicks</p>
+                  <p style={{ margin: '8px 0 0 0', fontSize: '28px', fontWeight: 'bold', color: theme.colors.success }}>{adCampaigns.reduce((sum, c) => sum + c.performance.clicks, 0).toLocaleString()}</p>
+                </div>
+                <div style={{ padding: theme.spacing.lg, backgroundColor: theme.colors.background.secondary, borderRadius: theme.borderRadius.md, border: `2px solid #FFD700` }}>
+                  <p style={{ margin: 0, color: theme.colors.text.secondary, fontSize: theme.typography.fontSize.sm }}>💰 Avg CPC</p>
+                  <p style={{ margin: '8px 0 0 0', fontSize: '28px', fontWeight: 'bold', color: '#FFD700' }}>${(adCampaigns.length > 0 ? adCampaigns.reduce((sum, c) => sum + c.performance.cpc, 0) / adCampaigns.length : 0).toFixed(2)}</p>
+                </div>
+              </div>
+
+              {/* Ad Platform Integration Tabs */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: theme.spacing.md }}>
+                <div style={{ padding: theme.spacing.lg, backgroundColor: theme.colors.background.secondary, borderRadius: theme.borderRadius.md, border: `1px solid ${theme.colors.gray[800]}` }}>
+                  <div style={{ fontSize: '32px', marginBottom: theme.spacing.sm }}>🔍</div>
+                  <h4 style={{ margin: '0 0 8px 0', color: theme.colors.text.primary }}>Google AdWords</h4>
+                  <p style={{ margin: 0, color: theme.colors.text.secondary, fontSize: theme.typography.fontSize.sm, marginBottom: theme.spacing.sm }}>Pay-per-click advertising & keyword bidding</p>
+                  <button style={{ width: '100%', padding: `${theme.spacing.sm} ${theme.spacing.md}`, backgroundColor: theme.colors.primary, color: 'white', border: 'none', borderRadius: theme.borderRadius.md, cursor: 'pointer', fontWeight: 600, fontSize: theme.typography.fontSize.sm }}>
+                    🔗 Connect
+                  </button>
+                </div>
+
+                <div style={{ padding: theme.spacing.lg, backgroundColor: theme.colors.background.secondary, borderRadius: theme.borderRadius.md, border: `1px solid ${theme.colors.gray[800]}` }}>
+                  <div style={{ fontSize: '32px', marginBottom: theme.spacing.sm }}>🤖</div>
+                  <h4 style={{ margin: '0 0 8px 0', color: theme.colors.text.primary }}>ChatGPT Ads</h4>
+                  <p style={{ margin: 0, color: theme.colors.text.secondary, fontSize: theme.typography.fontSize.sm, marginBottom: theme.spacing.sm }}>AI-powered ad copy & optimization</p>
+                  <button style={{ width: '100%', padding: `${theme.spacing.sm} ${theme.spacing.md}`, backgroundColor: theme.colors.primary, color: 'white', border: 'none', borderRadius: theme.borderRadius.md, cursor: 'pointer', fontWeight: 600, fontSize: theme.typography.fontSize.sm }}>
+                    🔗 Connect
+                  </button>
+                </div>
+
+                <div style={{ padding: theme.spacing.lg, backgroundColor: theme.colors.background.secondary, borderRadius: theme.borderRadius.md, border: `1px solid ${theme.colors.gray[800]}` }}>
+                  <div style={{ fontSize: '32px', marginBottom: theme.spacing.sm }}>⚡</div>
+                  <h4 style={{ margin: '0 0 8px 0', color: theme.colors.text.primary }}>AEO Optimization</h4>
+                  <p style={{ margin: 0, color: theme.colors.text.secondary, fontSize: theme.typography.fontSize.sm, marginBottom: theme.spacing.sm }}>Answer Engine Optimization for ChatGPT, Perplexity</p>
+                  <button style={{ width: '100%', padding: `${theme.spacing.sm} ${theme.spacing.md}`, backgroundColor: theme.colors.primary, color: 'white', border: 'none', borderRadius: theme.borderRadius.md, cursor: 'pointer', fontWeight: 600, fontSize: theme.typography.fontSize.sm }}>
+                    🔗 Connect
+                  </button>
+                </div>
+              </div>
+
+              {/* Create Campaign Button */}
+              <button onClick={() => setShowCreateAdModal(true)} style={{ padding: `${theme.spacing.sm} ${theme.spacing.md}`, backgroundColor: theme.colors.accent, color: '#000', border: 'none', borderRadius: theme.borderRadius.md, cursor: 'pointer', fontWeight: 600, fontSize: theme.typography.fontSize.base }}>
+                📊 Create Ad Campaign
+              </button>
+
+              {/* Ad Campaigns List */}
+              <div>
+                <h3 style={{ margin: '0 0 12px 0', color: theme.colors.text.primary }}>📈 Active Ad Campaigns</h3>
+                {adCampaigns.filter(c => c.status === 'active').length > 0 ? (
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', gap: theme.spacing.md }}>
+                    {adCampaigns.filter(c => c.status === 'active').map(campaign => (
+                      <div key={campaign.id} onClick={() => setSelectedAdCampaign(selectedAdCampaign === campaign.id ? null : campaign.id)} style={{ padding: theme.spacing.md, backgroundColor: theme.colors.background.secondary, borderRadius: theme.borderRadius.md, border: selectedAdCampaign === campaign.id ? `2px solid ${theme.colors.accent}` : `1px solid ${theme.colors.gray[800]}`, cursor: 'pointer' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: theme.spacing.md }}>
+                          <div>
+                            <h4 style={{ margin: 0, marginBottom: theme.spacing.xs, color: theme.colors.text.primary }}>{campaign.title}</h4>
+                            <p style={{ margin: 0, color: theme.colors.text.secondary, fontSize: theme.typography.fontSize.sm }}>{campaign.description}</p>
+                          </div>
+                          <div style={{ fontSize: '28px' }}>
+                            {campaign.platform === 'google_ads' && '🔍'}
+                            {campaign.platform === 'chatgpt' && '🤖'}
+                            {campaign.platform === 'aeo' && '⚡'}
+                          </div>
+                        </div>
+
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: theme.spacing.sm, marginBottom: theme.spacing.md }}>
+                          <div>
+                            <p style={{ margin: 0, color: theme.colors.text.tertiary, fontSize: theme.typography.fontSize.xs }}>BUDGET</p>
+                            <p style={{ margin: '4px 0 0 0', color: theme.colors.accent, fontWeight: 600, fontSize: theme.typography.fontSize.sm }}>${campaign.budget}</p>
+                          </div>
+                          <div>
+                            <p style={{ margin: 0, color: theme.colors.text.tertiary, fontSize: theme.typography.fontSize.xs }}>CTR</p>
+                            <p style={{ margin: '4px 0 0 0', color: theme.colors.success, fontWeight: 600, fontSize: theme.typography.fontSize.sm }}>{campaign.performance.ctr.toFixed(2)}%</p>
+                          </div>
+                          <div>
+                            <p style={{ margin: 0, color: theme.colors.text.tertiary, fontSize: theme.typography.fontSize.xs }}>CONVERSIONS</p>
+                            <p style={{ margin: '4px 0 0 0', color: theme.colors.primary, fontWeight: 600, fontSize: theme.typography.fontSize.sm }}>{campaign.performance.conversions}</p>
+                          </div>
+                          <div>
+                            <p style={{ margin: 0, color: theme.colors.text.tertiary, fontSize: theme.typography.fontSize.xs }}>CPC</p>
+                            <p style={{ margin: '4px 0 0 0', color: '#FFD700', fontWeight: 600, fontSize: theme.typography.fontSize.sm }}>${campaign.performance.cpc.toFixed(2)}</p>
+                          </div>
+                        </div>
+
+                        {campaign.keywords.length > 0 && (
+                          <div style={{ marginBottom: theme.spacing.md }}>
+                            <p style={{ margin: '0 0 8px 0', color: theme.colors.text.secondary, fontSize: theme.typography.fontSize.xs, fontWeight: 600 }}>Keywords:</p>
+                            <div style={{ display: 'flex', gap: theme.spacing.xs, flexWrap: 'wrap' }}>
+                              {campaign.keywords.slice(0, 3).map((kw, idx) => (
+                                <span key={idx} style={{ padding: `2px 8px`, backgroundColor: theme.colors.background.tertiary, borderRadius: theme.borderRadius.sm, fontSize: theme.typography.fontSize.xs, color: theme.colors.text.secondary }}>{kw}</span>
+                              ))}
+                              {campaign.keywords.length > 3 && <span style={{ padding: `2px 8px`, color: theme.colors.text.tertiary, fontSize: theme.typography.fontSize.xs }}>+{campaign.keywords.length - 3} more</span>}
+                            </div>
+                          </div>
+                        )}
+
+                        <div style={{ display: 'flex', gap: theme.spacing.sm }}>
+                          <button onClick={(e) => { e.stopPropagation(); handlePauseAdCampaign(campaign.id); }} style={{ flex: 1, padding: `4px 8px`, backgroundColor: theme.colors.background.tertiary, color: theme.colors.text.primary, border: `1px solid ${theme.colors.gray[700]}`, borderRadius: theme.borderRadius.sm, cursor: 'pointer', fontSize: theme.typography.fontSize.xs, fontWeight: 600 }}>⏸️ Pause</button>
+                          <button onClick={(e) => { e.stopPropagation(); alert('View detailed analytics'); }} style={{ flex: 1, padding: `4px 8px`, backgroundColor: theme.colors.primary, color: 'white', border: 'none', borderRadius: theme.borderRadius.sm, cursor: 'pointer', fontSize: theme.typography.fontSize.xs, fontWeight: 600 }}>📊 Details</button>
+                        </div>
+
+                        {selectedAdCampaign === campaign.id && (
+                          <div style={{ marginTop: theme.spacing.md, paddingTop: theme.spacing.md, borderTop: `1px solid ${theme.colors.gray[800]}` }}>
+                            <h5 style={{ margin: '0 0 12px 0', color: theme.colors.text.primary }}>📍 GEO Performance</h5>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: theme.spacing.sm }}>
+                              <div style={{ padding: theme.spacing.sm, backgroundColor: theme.colors.background.tertiary, borderRadius: theme.borderRadius.sm }}>
+                                <p style={{ margin: 0, color: theme.colors.text.secondary, fontSize: theme.typography.fontSize.xs }}>Top Region</p>
+                                <p style={{ margin: '4px 0 0 0', color: theme.colors.text.primary, fontWeight: 600 }}>United States</p>
+                              </div>
+                              <div style={{ padding: theme.spacing.sm, backgroundColor: theme.colors.background.tertiary, borderRadius: theme.borderRadius.sm }}>
+                                <p style={{ margin: 0, color: theme.colors.text.secondary, fontSize: theme.typography.fontSize.xs }}>Regional CTR</p>
+                                <p style={{ margin: '4px 0 0 0', color: theme.colors.success, fontWeight: 600 }}>4.2%</p>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div style={{ padding: theme.spacing.lg, textAlign: 'center', backgroundColor: theme.colors.background.secondary, borderRadius: theme.borderRadius.md, border: `1px dashed ${theme.colors.gray[800]}`, color: theme.colors.text.secondary }}>
+                    No active ad campaigns yet. Create one to start advertising!
                   </div>
                 )}
               </div>
@@ -1450,6 +1754,84 @@ export const CommunityManagerModal: React.FC<CommunityManagerModalProps> = ({ vi
         </div>
 
       )}
+
+      {showCreateAdModal && (
+        <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0, 0, 0, 0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1001 }} onClick={(e) => { if (e.target === e.currentTarget) setShowCreateAdModal(false); }}>
+          <div style={{ backgroundColor: theme.colors.background.primary, borderRadius: theme.borderRadius.lg, width: '95%', maxWidth: '600px', maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 20px 60px rgba(0, 0, 0, 0.3)' }}>
+            <div style={{ padding: theme.spacing.lg, borderBottom: `1px solid ${theme.colors.gray[800]}` }}>
+              <h3 style={{ margin: 0, color: theme.colors.text.primary }}>📊 Create Ad Campaign</h3>
+              <p style={{ margin: '8px 0 0 0', color: theme.colors.text.secondary, fontSize: theme.typography.fontSize.sm }}>Launch an ad campaign on Google AdWords, ChatGPT Ads, or AEO</p>
+            </div>
+            <div style={{ padding: theme.spacing.lg }}>
+              <div style={{ marginBottom: theme.spacing.lg }}>
+                <label style={{ display: 'block', marginBottom: theme.spacing.xs, color: theme.colors.text.primary, fontWeight: 600 }}>Campaign Title</label>
+                <input type="text" value={adForm.title} onChange={(e) => setAdForm({ ...adForm, title: e.target.value })} placeholder="e.g., Summer Music Festival Promo" style={{ width: '100%', padding: theme.spacing.sm, borderRadius: theme.borderRadius.md, border: `1px solid ${theme.colors.gray[700]}`, backgroundColor: theme.colors.background.secondary, color: theme.colors.text.primary, fontSize: theme.typography.fontSize.base, boxSizing: 'border-box' }} />
+              </div>
+              <div style={{ marginBottom: theme.spacing.lg }}>
+                <label style={{ display: 'block', marginBottom: theme.spacing.xs, color: theme.colors.text.primary, fontWeight: 600 }}>Description</label>
+                <textarea value={adForm.description} onChange={(e) => setAdForm({ ...adForm, description: e.target.value })} placeholder="Describe your ad campaign and target audience..." style={{ width: '100%', padding: theme.spacing.sm, borderRadius: theme.borderRadius.md, border: `1px solid ${theme.colors.gray[700]}`, backgroundColor: theme.colors.background.secondary, color: theme.colors.text.primary, fontSize: theme.typography.fontSize.base, boxSizing: 'border-box', minHeight: '80px', fontFamily: 'inherit' }} />
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: theme.spacing.md, marginBottom: theme.spacing.lg }}>
+                <div>
+                  <label style={{ display: 'block', marginBottom: theme.spacing.xs, color: theme.colors.text.primary, fontWeight: 600 }}>Ad Platform</label>
+                  <select value={adForm.platform} onChange={(e) => setAdForm({ ...adForm, platform: e.target.value as any })} style={{ width: '100%', padding: theme.spacing.sm, borderRadius: theme.borderRadius.md, border: `1px solid ${theme.colors.gray[700]}`, backgroundColor: theme.colors.background.secondary, color: theme.colors.text.primary, fontSize: theme.typography.fontSize.base }}>
+                    <option value="google_ads">🔍 Google AdWords</option>
+                    <option value="chatgpt">🤖 ChatGPT Ads</option>
+                    <option value="aeo">⚡ AEO</option>
+                  </select>
+                </div>
+                <div>
+                  <label style={{ display: 'block', marginBottom: theme.spacing.xs, color: theme.colors.text.primary, fontWeight: 600 }}>Budget</label>
+                  <input type="number" value={adForm.budget} onChange={(e) => setAdForm({ ...adForm, budget: parseFloat(e.target.value) || 0 })} min="0" step="10" style={{ width: '100%', padding: theme.spacing.sm, borderRadius: theme.borderRadius.md, border: `1px solid ${theme.colors.gray[700]}`, backgroundColor: theme.colors.background.secondary, color: theme.colors.text.primary, fontSize: theme.typography.fontSize.base, boxSizing: 'border-box' }} />
+                </div>
+              </div>
+              <div style={{ marginBottom: theme.spacing.lg }}>
+                <label style={{ display: 'block', marginBottom: theme.spacing.xs, color: theme.colors.text.primary, fontWeight: 600 }}>Target Audience</label>
+                <input type="text" value={adForm.targetAudience} onChange={(e) => setAdForm({ ...adForm, targetAudience: e.target.value })} placeholder="e.g., Music lovers 18-35" style={{ width: '100%', padding: theme.spacing.sm, borderRadius: theme.borderRadius.md, border: `1px solid ${theme.colors.gray[700]}`, backgroundColor: theme.colors.background.secondary, color: theme.colors.text.primary, fontSize: theme.typography.fontSize.base, boxSizing: 'border-box' }} />
+              </div>
+              <div style={{ marginBottom: theme.spacing.lg }}>
+                <label style={{ display: 'block', marginBottom: theme.spacing.xs, color: theme.colors.text.primary, fontWeight: 600 }}>Keywords</label>
+                <div style={{ display: 'flex', gap: theme.spacing.sm, marginBottom: theme.spacing.sm }}>
+                  <input type="text" value={adForm.keywordInput} onChange={(e) => setAdForm({ ...adForm, keywordInput: e.target.value })} placeholder="Add keyword and press Enter" onKeyPress={(e) => { if (e.key === 'Enter') handleAddKeyword(); }} style={{ flex: 1, padding: theme.spacing.sm, borderRadius: theme.borderRadius.md, border: `1px solid ${theme.colors.gray[700]}`, backgroundColor: theme.colors.background.secondary, color: theme.colors.text.primary, fontSize: theme.typography.fontSize.base, boxSizing: 'border-box' }} />
+                  <button onClick={handleAddKeyword} style={{ padding: `${theme.spacing.sm} ${theme.spacing.md}`, backgroundColor: theme.colors.primary, color: 'white', border: 'none', borderRadius: theme.borderRadius.md, cursor: 'pointer', fontWeight: 600, whiteSpace: 'nowrap' }}>Add</button>
+                </div>
+                {adForm.keywords.length > 0 && (
+                  <div>
+                    {adForm.keywords.map((kw, idx) => (
+                      <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: `${theme.spacing.xs} ${theme.spacing.sm}`, backgroundColor: theme.colors.background.secondary, borderRadius: theme.borderRadius.sm, marginBottom: theme.spacing.xs }}>
+                        <span style={{ color: theme.colors.text.secondary, fontSize: theme.typography.fontSize.sm }}>🔍 {kw}</span>
+                        <button onClick={() => handleRemoveKeyword(idx)} style={{ background: 'none', border: 'none', color: theme.colors.danger, cursor: 'pointer', fontWeight: 600 }}>✕</button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <div style={{ marginBottom: theme.spacing.lg }}>
+                <label style={{ display: 'block', marginBottom: theme.spacing.xs, color: theme.colors.text.primary, fontWeight: 600 }}>Geographic Targeting</label>
+                <div style={{ display: 'flex', gap: theme.spacing.sm, marginBottom: theme.spacing.sm }}>
+                  <input type="text" value={adForm.geoInput} onChange={(e) => setAdForm({ ...adForm, geoInput: e.target.value })} placeholder="Add country/region and press Enter" onKeyPress={(e) => { if (e.key === 'Enter') handleAddGeoTarget(); }} style={{ flex: 1, padding: theme.spacing.sm, borderRadius: theme.borderRadius.md, border: `1px solid ${theme.colors.gray[700]}`, backgroundColor: theme.colors.background.secondary, color: theme.colors.text.primary, fontSize: theme.typography.fontSize.base, boxSizing: 'border-box' }} />
+                  <button onClick={handleAddGeoTarget} style={{ padding: `${theme.spacing.sm} ${theme.spacing.md}`, backgroundColor: theme.colors.primary, color: 'white', border: 'none', borderRadius: theme.borderRadius.md, cursor: 'pointer', fontWeight: 600, whiteSpace: 'nowrap' }}>Add</button>
+                </div>
+                {adForm.geoTargeting.length > 0 && (
+                  <div>
+                    {adForm.geoTargeting.map((geo, idx) => (
+                      <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: `${theme.spacing.xs} ${theme.spacing.sm}`, backgroundColor: theme.colors.background.secondary, borderRadius: theme.borderRadius.sm, marginBottom: theme.spacing.xs }}>
+                        <span style={{ color: theme.colors.text.secondary, fontSize: theme.typography.fontSize.sm }}>📍 {geo}</span>
+                        <button onClick={() => handleRemoveGeoTarget(idx)} style={{ background: 'none', border: 'none', color: theme.colors.danger, cursor: 'pointer', fontWeight: 600 }}>✕</button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <div style={{ display: 'flex', gap: theme.spacing.md }}>
+                <button onClick={() => setShowCreateAdModal(false)} style={{ flex: 1, padding: `${theme.spacing.sm} ${theme.spacing.md}`, backgroundColor: theme.colors.background.tertiary, color: theme.colors.text.primary, border: `1px solid ${theme.colors.gray[700]}`, borderRadius: theme.borderRadius.md, cursor: 'pointer', fontWeight: 600 }}>Cancel</button>
+                <button onClick={handleCreateAdCampaign} style={{ flex: 1, padding: `${theme.spacing.sm} ${theme.spacing.md}`, backgroundColor: theme.colors.accent, color: '#000', border: 'none', borderRadius: theme.borderRadius.md, cursor: 'pointer', fontWeight: 600 }}>📊 Create Campaign</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {showCreateQuestModal && (
         <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0, 0, 0, 0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1001 }} onClick={(e) => { if (e.target === e.currentTarget) setShowCreateQuestModal(false); }}>
           <div style={{ backgroundColor: theme.colors.background.primary, borderRadius: theme.borderRadius.lg, width: '95%', maxWidth: '600px', maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 20px 60px rgba(0, 0, 0, 0.3)' }}>
