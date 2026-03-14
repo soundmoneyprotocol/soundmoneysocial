@@ -63,7 +63,7 @@ export const PricingPlans: React.FC<PricingPlansProps> = ({
       <div
         style={{
           padding: theme.spacing.lg,
-          color: theme.colors.error,
+          color: theme.colors.danger,
           textAlign: 'center',
         }}
       >

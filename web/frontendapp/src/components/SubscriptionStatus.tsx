@@ -92,7 +92,7 @@ export const SubscriptionStatus: React.FC<SubscriptionStatusProps> = ({
   if (error) {
     return (
       <Card>
-        <p style={{ color: theme.colors.error }}>
+        <p style={{ color: theme.colors.danger }}>
           Error loading subscription: {error}
         </p>
       </Card>

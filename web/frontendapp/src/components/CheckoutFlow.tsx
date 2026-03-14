@@ -178,10 +178,10 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
           <div
             style={{
               padding: theme.spacing.md,
-              backgroundColor: `${theme.colors.error}20`,
-              border: `1px solid ${theme.colors.error}`,
+              backgroundColor: `${theme.colors.danger}20`,
+              border: `1px solid ${theme.colors.danger}`,
               borderRadius: theme.borderRadius.md,
-              color: theme.colors.error,
+              color: theme.colors.danger,
               fontSize: '14px',
             }}
           >

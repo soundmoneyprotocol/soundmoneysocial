@@ -85,10 +85,10 @@ export const BillingPortal: React.FC<BillingPortalProps> = ({
           style={{
             marginTop: theme.spacing.sm,
             padding: theme.spacing.sm,
-            backgroundColor: `${theme.colors.error}20`,
-            border: `1px solid ${theme.colors.error}`,
+            backgroundColor: `${theme.colors.danger}20`,
+            border: `1px solid ${theme.colors.danger}`,
             borderRadius: theme.borderRadius.sm,
-            color: theme.colors.error,
+            color: theme.colors.danger,
             fontSize: '12px',
           }}
         >
