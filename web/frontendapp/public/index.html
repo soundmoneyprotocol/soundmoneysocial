@@ -36,9 +36,10 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="referrer" content="strict-origin-when-cross-origin" />
 
-    <!-- Disable MetaMask/Ethereum Wallet Extensions for This App -->
-    <!-- This prevents MetaMask and similar extensions from injecting ethereum provider -->
-    <!-- which conflicts with Solana wallet adapter. Keeps them enabled for other apps. -->
+    <!-- DISABLED: MetaMask/Ethereum Wallet Override (for Web3 testing later) -->
+    <!-- This script was causing "configurable: false" errors with MetaMask. -->
+    <!-- Uncomment when ready to re-enable Web3 wallet blocking. -->
+    <!--
     <script>
       // Override MetaMask and other EVM wallet extensions ONLY on this domain
       // This prevents console errors while keeping them active on other sites
@@ -54,13 +55,14 @@
           set: function(value) {
             // Silently ignore attempts to set ethereum provider
           },
-          configurable: false
+          configurable: true
         });
 
         console.log('ℹ️ MetaMask/EVM wallet extensions disabled for SoundMoney (Solana only)');
         console.log('💡 Your wallet extensions are still active on other websites');
       }
     </script>
+    -->
 
     <title>SoundMoney Social</title>
   </head>
