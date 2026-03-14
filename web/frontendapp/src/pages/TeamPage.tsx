@@ -648,7 +648,7 @@ const TeamPage: React.FC = () => {
               }}>
                 <p style={{ margin: '0 0 8px 0', color: theme.colors.text.secondary }}>SoundMoney API Key:</p>
                 <p style={{ margin: 0, color: theme.colors.accent, userSelect: 'all' }}>
-                  sk_live_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+                  ••••••••••••••••••••••••••••••••
                 </p>
                 <button style={{
                   marginTop: theme.spacing.sm,
