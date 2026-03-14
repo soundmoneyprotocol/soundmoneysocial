@@ -85,7 +85,7 @@ export const BillingHistory: React.FC<BillingHistoryProps> = ({
   if (error) {
     return (
       <Card>
-        <p style={{ color: theme.colors.error }}>
+        <p style={{ color: theme.colors.danger }}>
           Error loading payment history: {error}
         </p>
       </Card>
@@ -189,7 +189,7 @@ export const BillingHistory: React.FC<BillingHistoryProps> = ({
                 payment.status === 'paid'
                   ? theme.colors.success
                   : payment.status === 'failed'
-                    ? theme.colors.error
+                    ? theme.colors.danger
                     : theme.colors.gray[400];
 
               return (
