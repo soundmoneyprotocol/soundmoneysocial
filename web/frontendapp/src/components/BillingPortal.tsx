@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { Button } from './Button';
+import Button from './Button';
 import { theme } from '../theme/theme';
 
 export interface BillingPortalProps {
