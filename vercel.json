@@ -1,15 +1,5 @@
 {
   "version": 2,
   "buildCommand": "cd web/frontendapp && npm run build",
-  "outputDirectory": "web/frontendapp/build",
-  "env": {
-    "REACT_APP_API_BASE_URL": "@react-app-api-base-url",
-    "REACT_APP_SUPABASE_URL": "@react-app-supabase-url",
-    "REACT_APP_SUPABASE_ANON_KEY": "@react-app-supabase-anon-key"
-  },
-  "git": {
-    "deploymentEnabled": {
-      "main": true
-    }
-  }
+  "outputDirectory": "web/frontendapp/build"
 }
