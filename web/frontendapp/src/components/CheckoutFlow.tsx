@@ -90,7 +90,7 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
   if (!isOpen) return null;
 
   return (
-    <Modal onClose={onClose || (() => {})} title={`Upgrade to ${planName}`}>
+    <Modal isOpen={isOpen} onClose={onClose || (() => {})} title={`Upgrade to ${planName}`}>
       <div
         style={{
           padding: theme.spacing.lg,
