@@ -8,6 +8,11 @@ export { default as Input } from './Input';
 export { default as Loading } from './Loading';
 export { default as Modal } from './Modal';
 export { default as AudioPlayer } from './AudioPlayer';
+export { default as PricingPlans } from './PricingPlans';
+export { default as SubscriptionStatus } from './SubscriptionStatus';
+export { default as BillingHistory } from './BillingHistory';
+export { default as CheckoutFlow } from './CheckoutFlow';
+export { default as BillingPortal } from './BillingPortal';
 
 export type { AvatarProps } from './Avatar';
 export type { BadgeProps } from './Badge';
@@ -18,4 +23,8 @@ export type { HeaderProps } from './Header';
 export type { InputProps } from './Input';
 export type { LoadingProps } from './Loading';
 export type { ModalProps } from './Modal';
-
+export type { PricingPlansProps, Plan } from './PricingPlans';
+export type { SubscriptionStatusProps, Subscription } from './SubscriptionStatus';
+export type { BillingHistoryProps, Payment } from './BillingHistory';
+export type { CheckoutFlowProps } from './CheckoutFlow';
+export type { BillingPortalProps } from './BillingPortal';

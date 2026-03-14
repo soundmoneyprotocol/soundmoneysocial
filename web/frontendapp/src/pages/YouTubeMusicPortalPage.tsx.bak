@@ -17,9 +17,6 @@ interface FormData {
   genre: string;
   youtubeUrl: string;
   spotifyUrl: string;
-  tiktokUrl: string;
-  instagramReelUrl: string;
-  bandcampUrl: string;
   streamPrice: string;
   duration: number;
   metadata?: TrackMetadata;
@@ -38,9 +35,6 @@ const YouTubeMusicPortalPage: React.FC = () => {
     genre: 'pop',
     youtubeUrl: '',
     spotifyUrl: '',
-    tiktokUrl: '',
-    instagramReelUrl: '',
-    bandcampUrl: '',
     streamPrice: '0.0015',
     duration: 180,
     metadata: {
@@ -58,8 +52,6 @@ const YouTubeMusicPortalPage: React.FC = () => {
   const [uploadedFileName, setUploadedFileName] = useState('');
   const [showMetadataModal, setShowMetadataModal] = useState(false);
   const [metadataTagInput, setMetadataTagInput] = useState('');
-  const [showLicensingTab, setShowLicensingTab] = useState(false);
-  const [showMetadataBulkEditModal, setShowMetadataBulkEditModal] = useState(false);
 
   // Load tracks on mount
   useEffect(() => {
@@ -203,9 +195,6 @@ const YouTubeMusicPortalPage: React.FC = () => {
         genre: 'pop',
         youtubeUrl: '',
         spotifyUrl: '',
-        tiktokUrl: '',
-        instagramReelUrl: '',
-        bandcampUrl: '',
         streamPrice: '0.0015',
         duration: 180,
         metadata: {
@@ -236,9 +225,6 @@ const YouTubeMusicPortalPage: React.FC = () => {
       genre: track.genre,
       youtubeUrl: track.youtubeUrl || '',
       spotifyUrl: track.spotifyUrl || '',
-      tiktokUrl: (track as any).tiktokUrl || '',
-      instagramReelUrl: (track as any).instagramReelUrl || '',
-      bandcampUrl: (track as any).bandcampUrl || '',
       streamPrice: track.streamPrice,
       duration: track.duration,
       metadata: track.metadata || {
@@ -336,7 +322,7 @@ const YouTubeMusicPortalPage: React.FC = () => {
   return (
     <Container maxWidth="lg" padding="lg">
       <Header
-        title="Music Portal"
+        title="🎵 Music Portal"
         subtitle="Manage your streaming track catalog"
       />
 
@@ -402,11 +388,8 @@ const YouTubeMusicPortalPage: React.FC = () => {
               genre: 'pop',
               youtubeUrl: '',
               spotifyUrl: '',
-              tiktokUrl: '',
               streamPrice: '0.0015',
-              instagramReelUrl: '',
               duration: 180,
-              bandcampUrl: '',
               metadata: {
                 description: '',
                 releaseDate: '',
@@ -929,69 +912,6 @@ const YouTubeMusicPortalPage: React.FC = () => {
                 />
               </div>
 
-              
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: theme.spacing.md }}>
-                <div>
-                  <label style={{
-                    display: 'block',
-                    marginBottom: theme.spacing.xs,
-                    color: theme.colors.text.secondary,
-                    fontSize: theme.typography.fontSize.sm,
-                  }}>
-                    ISRC Code
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.metadata?.isrcCode || ''}
-                    onChange={(e) => setFormData({
-                      ...formData,
-                      metadata: { ...formData.metadata, isrcCode: e.target.value },
-                    })}
-                    style={{
-                      width: '100%',
-                      padding: theme.spacing.sm,
-                      borderRadius: theme.borderRadius.md,
-                      border: `1px solid ${theme.colors.gray[700]}`,
-                      backgroundColor: theme.colors.background.secondary,
-                      color: theme.colors.text.primary,
-                      fontSize: theme.typography.fontSize.base,
-                      boxSizing: 'border-box',
-                    }}
-                    placeholder="e.g., USRC17607839"
-                  />
-                </div>
-
-                <div>
-                  <label style={{
-                    display: 'block',
-                    marginBottom: theme.spacing.xs,
-                    color: theme.colors.text.secondary,
-                    fontSize: theme.typography.fontSize.sm,
-                  }}>
-                    BMI/ASCAP Member #
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.metadata?.publishingMemberId || ''}
-                    onChange={(e) => setFormData({
-                      ...formData,
-                      metadata: { ...formData.metadata, publishingMemberId: e.target.value },
-                    })}
-                    style={{
-                      width: '100%',
-                      padding: theme.spacing.sm,
-                      borderRadius: theme.borderRadius.md,
-                      border: `1px solid ${theme.colors.gray[700]}`,
-                      backgroundColor: theme.colors.background.secondary,
-                      color: theme.colors.text.primary,
-                      fontSize: theme.typography.fontSize.base,
-                      boxSizing: 'border-box',
-                    }}
-                    placeholder="Publishing member number"
-                  />
-                </div>
-              </div>
-
               <div>
                 <label style={{
                   display: 'block',
@@ -1080,146 +1000,15 @@ const YouTubeMusicPortalPage: React.FC = () => {
         </div>
       )}
 
-      {/* Bulk Metadata Edit Modal */}
-      {showMetadataBulkEditModal && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: 'rgba(0, 0, 0, 0.7)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 1001,
-        }}>
-          <Card style={{
-            maxWidth: '90vw',
-            maxHeight: '80vh',
-            overflowY: 'auto',
-            width: '100%',
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: theme.spacing.lg }}>
-              <h2 style={{ margin: 0, color: theme.colors.text.primary }}>
-                📝 Update Metadata
-              </h2>
-              <button
-                onClick={() => setShowMetadataBulkEditModal(false)}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  fontSize: '28px',
-                  cursor: 'pointer',
-                  color: theme.colors.text.secondary,
-                }}
-              >
-                ✕
-              </button>
-            </div>
-
-            {/* Metadata Table */}
-            <div style={{ overflowX: 'auto', marginBottom: theme.spacing.lg }}>
-              <table style={{
-                width: '100%',
-                borderCollapse: 'collapse',
-                color: theme.colors.text.primary,
-                fontSize: theme.typography.fontSize.sm,
-              }}>
-                <thead>
-                  <tr style={{ borderBottom: `2px solid ${theme.colors.gray[800]}` }}>
-                    <th style={{ textAlign: 'left', padding: theme.spacing.md, color: theme.colors.text.secondary, fontWeight: 600 }}>
-                      Artist
-                    </th>
-                    <th style={{ textAlign: 'left', padding: theme.spacing.md, color: theme.colors.text.secondary, fontWeight: 600 }}>
-                      Song Title
-                    </th>
-                    <th style={{ textAlign: 'left', padding: theme.spacing.md, color: theme.colors.text.secondary, fontWeight: 600 }}>
-                      Genre
-                    </th>
-                    <th style={{ textAlign: 'left', padding: theme.spacing.md, color: theme.colors.text.secondary, fontWeight: 600 }}>
-                      Duration
-                    </th>
-                    <th style={{ textAlign: 'center', padding: theme.spacing.md, color: theme.colors.text.secondary, fontWeight: 600 }}>
-                      Action
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {tracks.map((track, index) => (
-                    <tr key={track.id} style={{
-                      borderBottom: `1px solid ${theme.colors.gray[800]}`,
-                      backgroundColor: index % 2 === 0 ? theme.colors.background.secondary : 'transparent',
-                    }}>
-                      <td style={{ padding: theme.spacing.md, color: theme.colors.text.primary }}>
-                        {track.artist}
-                      </td>
-                      <td style={{ padding: theme.spacing.md, color: theme.colors.text.primary }}>
-                        {track.title}
-                      </td>
-                      <td style={{ padding: theme.spacing.md, color: theme.colors.text.secondary }}>
-                        {track.genre}
-                      </td>
-                      <td style={{ padding: theme.spacing.md, color: theme.colors.text.secondary }}>
-                        {Math.floor(track.duration / 60)}m {track.duration % 60}s
-                      </td>
-                      <td style={{ padding: theme.spacing.md, textAlign: 'center' }}>
-                        <button
-                          onClick={() => {
-                            handleEditTrack(track);
-                            setShowMetadataModal(true);
-                            setShowMetadataBulkEditModal(false);
-                          }}
-                          style={{
-                            padding: `${theme.spacing.xs} ${theme.spacing.md}`,
-                            borderRadius: theme.borderRadius.md,
-                            border: 'none',
-                            backgroundColor: theme.colors.primary,
-                            color: 'white',
-                            cursor: 'pointer',
-                            fontSize: theme.typography.fontSize.sm,
-                            fontWeight: 600,
-                          }}
-                        >
-                          ✏️
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-
-            {/* Modal Footer */}
-            <div style={{ display: 'flex', gap: theme.spacing.md, justifyContent: 'flex-end' }}>
-              <button
-                onClick={() => setShowMetadataBulkEditModal(false)}
-                style={{
-                  padding: `${theme.spacing.md} ${theme.spacing.lg}`,
-                  borderRadius: theme.borderRadius.md,
-                  border: `1px solid ${theme.colors.gray[700]}`,
-                  backgroundColor: 'transparent',
-                  color: theme.colors.text.primary,
-                  cursor: 'pointer',
-                  fontWeight: 600,
-                }}
-              >
-                Close
-              </button>
-            </div>
-          </Card>
-        </div>
-      )}
-
-      {/* Search & Actions */}
-      <div style={{ marginBottom: theme.spacing.lg, display: 'flex', gap: theme.spacing.md, alignItems: 'center' }}>
+      {/* Search */}
+      <div style={{ marginBottom: theme.spacing.lg }}>
         <input
           type="text"
           placeholder="🔍 Search tracks by title or artist..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           style={{
-            flex: 1,
+            width: '100%',
             padding: theme.spacing.md,
             borderRadius: theme.borderRadius.md,
             border: `1px solid ${theme.colors.gray[700]}`,
@@ -1229,24 +1018,6 @@ const YouTubeMusicPortalPage: React.FC = () => {
             boxSizing: 'border-box',
           }}
         />
-        {tracks.length > 0 && (
-          <button
-            onClick={() => setShowMetadataBulkEditModal(true)}
-            style={{
-              padding: `${theme.spacing.md} ${theme.spacing.lg}`,
-              borderRadius: theme.borderRadius.md,
-              border: 'none',
-              backgroundColor: theme.colors.primary,
-              color: 'white',
-              cursor: 'pointer',
-              fontWeight: 600,
-              fontSize: theme.typography.fontSize.base,
-              whiteSpace: 'nowrap',
-            }}
-          >
-            📝 Update Metadata
-          </button>
-        )}
       </div>
 
       {/* Tracks Table */}

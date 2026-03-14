@@ -56,3 +56,165 @@ textarea {
   scrollbar-color: #383838 #191414;
   scrollbar-width: thin;
 }
+
+/* ========== UI REFRESH - SOUNDMONEY BRANDING & CSS CLASSES ========== */
+
+/* SoundMoney Logo Branding */
+.soundmoney-logo {
+  display: inline-block;
+  position: relative;
+}
+
+.soundmoney-logo::before {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  background: linear-gradient(116deg, #00bbff, #9c42f5);
+  border-radius: 50%;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: -1;
+}
+
+.soundmoney-logo:hover::before {
+  opacity: 0.3;
+}
+
+/* SoundMoney Accent Color (Cyan) */
+.soundmoney-accent {
+  color: #00bbff;
+}
+
+.soundmoney-accent-glow {
+  text-shadow: 0 0 10px rgba(0, 187, 255, 0.5);
+  transition: text-shadow 0.3s ease;
+}
+
+.soundmoney-accent-glow:hover {
+  text-shadow: 0 0 20px rgba(0, 187, 255, 0.8);
+}
+
+/* SoundMoney Gradient Background */
+.soundmoney-gradient-bg {
+  background: linear-gradient(116deg, rgba(0, 187, 255, 0.1), rgba(156, 66, 245, 0.1));
+}
+
+/* ========== SHARED UI ENHANCEMENT CLASSES ========== */
+
+/* 1. Gradient Border Cards */
+.card-gradient-border {
+  position: relative;
+  border: 1px solid transparent;
+  background-clip: padding-box;
+  background-image:
+    linear-gradient(#121212, #121212),
+    linear-gradient(116deg, #00bbff, #9c42f5);
+  background-origin: border-box;
+}
+
+/* 2-5. Accent Left Border Cards (Four Color Variants) */
+.card-accent-left-cyan {
+  border-left: 4px solid #00bbff;
+  transition: border-color 0.3s ease;
+}
+
+.card-accent-left-purple {
+  border-left: 4px solid #9c42f5;
+  transition: border-color 0.3s ease;
+}
+
+.card-accent-left-green {
+  border-left: 4px solid #67BE68;
+  transition: border-color 0.3s ease;
+}
+
+.card-accent-left-orange {
+  border-left: 4px solid #ff5e00;
+  transition: border-color 0.3s ease;
+}
+
+/* 6. Hover Glow Effect */
+.card-hover-glow {
+  transition: all 0.3s ease;
+}
+
+.card-hover-glow:hover {
+  box-shadow: 0 0 24px rgba(0, 187, 255, 0.3);
+  transform: translateY(-2px);
+}
+
+/* 7. Table Header Enhancement */
+.table-header-gradient {
+  background: linear-gradient(
+    to right,
+    rgba(0, 255, 170, 0.05),
+    rgba(69, 121, 245, 0.05),
+    rgba(156, 66, 245, 0.05)
+  );
+  border-bottom: 2px solid rgba(0, 187, 255, 0.15);
+}
+
+/* 8. Icon Color Variants */
+.icon-cyan { color: #00bbff; }
+.icon-purple { color: #9c42f5; }
+.icon-green { color: #67BE68; }
+.icon-orange { color: #ff5e00; }
+
+/* Enhanced Button Transitions */
+.button-enhanced {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.button-enhanced:hover {
+  transform: scale(1.05);
+}
+
+.button-enhanced:active {
+  transform: scale(0.95);
+}
+
+/* SoundMoney Primary Button Style */
+.btn-soundmoney {
+  background: linear-gradient(135deg, #00bbff 0%, #9c42f5 100%);
+  color: white;
+  transition: all 0.3s ease;
+  box-shadow: 0 0 20px rgba(0, 187, 255, 0.3);
+}
+
+.btn-soundmoney:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 30px rgba(0, 187, 255, 0.5);
+}
+
+.btn-soundmoney:active {
+  transform: translateY(0);
+}
+
+/* SoundMoney Loading Animation */
+.soundmoney-loading {
+  background: linear-gradient(90deg, rgba(0, 187, 255, 0.1), rgba(156, 66, 245, 0.1), rgba(0, 187, 255, 0.1));
+  background-size: 200% 100%;
+  animation: soundmoney-shimmer 2s infinite;
+}
+
+@keyframes soundmoney-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* SoundMoney Card Styling */
+.soundmoney-card {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(0, 187, 255, 0.2);
+  border-radius: 12px;
+  backdrop-filter: blur(10px);
+  transition: all 0.3s ease;
+}
+
+.soundmoney-card:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(0, 187, 255, 0.4);
+  box-shadow: 0 0 20px rgba(0, 187, 255, 0.2);
+}
+
+/* ========== END UI REFRESH ========== */

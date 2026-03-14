@@ -1,5 +1,4 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { supabase } from '../services/supabaseClient';
 
 export interface User {
   id: string;
@@ -21,119 +20,180 @@ export interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+// API base URL for soundmoneymusic-main auth endpoints
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:3000';
+
+/**
+ * API calls to soundmoneymusic-main auth endpoints
+ */
+const authApi = {
+  async signup(email: string, password: string, username: string, referralCode?: string) {
+    const response = await fetch(`${API_BASE_URL}/api/auth/signup`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ email, password, username, referralCode }),
+    });
+    if (!response.ok) {
+      const data = await response.json();
+      throw new Error(data.error || 'Signup failed');
+    }
+    return response.json();
+  },
+
+  async login(email: string, password: string) {
+    const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ email, password }),
+    });
+    if (!response.ok) {
+      const data = await response.json();
+      throw new Error(data.error || 'Login failed');
+    }
+    return response.json();
+  },
+
+  async logout(refreshToken: string) {
+    const response = await fetch(`${API_BASE_URL}/api/auth/logout`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ refreshToken }),
+    });
+    if (!response.ok) {
+      console.error('Logout failed:', response.statusText);
+    }
+    return response.json();
+  },
+
+  async getSession(accessToken: string) {
+    const response = await fetch(`${API_BASE_URL}/api/auth/session`, {
+      headers: { 'Authorization': `Bearer ${accessToken}` },
+      credentials: 'include',
+    });
+    if (!response.ok) {
+      throw new Error('Session check failed');
+    }
+    return response.json();
+  },
+
+  async refreshToken(refreshToken: string) {
+    const response = await fetch(`${API_BASE_URL}/api/auth/refresh`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ refreshToken }),
+    });
+    if (!response.ok) {
+      throw new Error('Token refresh failed');
+    }
+    return response.json();
+  },
+};
+
+/**
+ * Token management helpers
+ */
+const tokenManager = {
+  getAccessToken(): string | null {
+    return sessionStorage.getItem('soundmoney_access_token');
+  },
+
+  getRefreshToken(): string | null {
+    return sessionStorage.getItem('soundmoney_refresh_token');
+  },
+
+  setTokens(accessToken: string, refreshToken: string): void {
+    sessionStorage.setItem('soundmoney_access_token', accessToken);
+    sessionStorage.setItem('soundmoney_refresh_token', refreshToken);
+  },
+
+  clearTokens(): void {
+    sessionStorage.removeItem('soundmoney_access_token');
+    sessionStorage.removeItem('soundmoney_refresh_token');
+    sessionStorage.removeItem('soundmoney_user');
+  },
+
+  setUser(user: User): void {
+    sessionStorage.setItem('soundmoney_user', JSON.stringify(user));
+  },
+
+  getUser(): User | null {
+    const user = sessionStorage.getItem('soundmoney_user');
+    return user ? JSON.parse(user) : null;
+  },
+};
+
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-  // Initialize auth state from Supabase session
+  // Initialize auth state from stored tokens
   useEffect(() => {
     const initializeAuth = async () => {
       try {
-        // Wrap getSession with timeout to prevent hanging
-        const sessionPromise = supabase.auth.getSession();
-        const timeoutPromise = new Promise((_, reject) =>
-          setTimeout(() => reject(new Error('Session check timeout')), 2000)
-        );
+        const accessToken = tokenManager.getAccessToken();
+        const storedUser = tokenManager.getUser();
 
-        const { data: { session } } = await Promise.race([
-          sessionPromise,
-          timeoutPromise,
-        ]) as any;
-
-        if (session?.user) {
-          // Use session data directly, don't fetch profile
-          const authUser: User = {
-            id: session.user.id,
-            email: session.user.email || '',
-            username: session.user.email?.split('@')[0] || 'User',
-            createdAt: new Date().toISOString(),
-          };
-          setUser(authUser);
-          setIsAuthenticated(true);
-          localStorage.setItem('soundmoney_user', JSON.stringify(authUser));
-        } else {
-          // Fall back to localStorage for mock/offline mode
-          const storedUser = localStorage.getItem('soundmoney_user');
-          if (storedUser) {
-            try {
-              const parsed = JSON.parse(storedUser);
-              setUser(parsed);
-              setIsAuthenticated(true);
-            } catch (error) {
-              console.error('Failed to parse stored user:', error);
-              localStorage.removeItem('soundmoney_user');
+        if (accessToken && storedUser) {
+          try {
+            // Validate token with server
+            const sessionData = await authApi.getSession(accessToken);
+            setUser(sessionData.user);
+            setIsAuthenticated(true);
+          } catch (error) {
+            // Token might be expired, try to refresh
+            const refreshToken = tokenManager.getRefreshToken();
+            if (refreshToken) {
+              try {
+                const newSession = await authApi.refreshToken(refreshToken);
+                tokenManager.setTokens(newSession.access_token, newSession.refresh_token);
+                // Get updated user data
+                const sessionData = await authApi.getSession(newSession.access_token);
+                setUser(sessionData.user);
+                setIsAuthenticated(true);
+              } catch (refreshError) {
+                // Refresh failed, clear tokens
+                tokenManager.clearTokens();
+                setUser(null);
+                setIsAuthenticated(false);
+              }
+            } else {
+              // No refresh token, clear storage
+              tokenManager.clearTokens();
+              setUser(null);
+              setIsAuthenticated(false);
             }
           }
+        } else {
+          setUser(null);
+          setIsAuthenticated(false);
         }
       } catch (error) {
         console.error('Failed to initialize auth:', error);
-        // Still load from localStorage if Supabase fails
-        const storedUser = localStorage.getItem('soundmoney_user');
-        if (storedUser) {
-          try {
-            const parsed = JSON.parse(storedUser);
-            setUser(parsed);
-            setIsAuthenticated(true);
-          } catch (e) {
-            console.error('Failed to parse stored user:', e);
-          }
-        }
+        setUser(null);
+        setIsAuthenticated(false);
       } finally {
         setIsLoading(false);
       }
     };
 
     initializeAuth();
-
-    // Subscribe to auth changes
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((event, session) => {
-      if (session?.user) {
-        const authUser: User = {
-          id: session.user.id,
-          email: session.user.email || '',
-          username: session.user.email?.split('@')[0] || 'User',
-          createdAt: new Date().toISOString(),
-        };
-        setUser(authUser);
-        setIsAuthenticated(true);
-        localStorage.setItem('soundmoney_user', JSON.stringify(authUser));
-      } else {
-        setUser(null);
-        setIsAuthenticated(false);
-        localStorage.removeItem('soundmoney_user');
-      }
-    });
-
-    return () => {
-      subscription?.unsubscribe();
-    };
   }, []);
 
   const login = async (email: string, password: string) => {
     setIsLoading(true);
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
+      const response = await authApi.login(email, password);
 
-      if (error) {
-        throw error;
-      }
-
-      if (data.user) {
-        const authUser: User = {
-          id: data.user.id,
-          email: data.user.email || '',
-          username: email.split('@')[0],
-          createdAt: new Date().toISOString(),
-        };
-        setUser(authUser);
+      if (response.user && response.session) {
+        tokenManager.setTokens(response.session.access_token, response.session.refresh_token);
+        tokenManager.setUser(response.user);
+        setUser(response.user);
         setIsAuthenticated(true);
-        localStorage.setItem('soundmoney_user', JSON.stringify(authUser));
       }
     } catch (error) {
       console.error('Login failed:', error);
@@ -146,25 +206,13 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const signup = async (email: string, password: string, username: string) => {
     setIsLoading(true);
     try {
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-      });
+      const response = await authApi.signup(email, password, username);
 
-      if (error) {
-        throw error;
-      }
-
-      if (data.user) {
-        const authUser: User = {
-          id: data.user.id,
-          email,
-          username,
-          createdAt: new Date().toISOString(),
-        };
-        setUser(authUser);
+      if (response.user && response.session) {
+        tokenManager.setTokens(response.session.access_token, response.session.refresh_token);
+        tokenManager.setUser(response.user);
+        setUser(response.user);
         setIsAuthenticated(true);
-        localStorage.setItem('soundmoney_user', JSON.stringify(authUser));
       }
     } catch (error) {
       console.error('Signup failed:', error);
@@ -177,21 +225,23 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const logout = async () => {
     setIsLoading(true);
     try {
-      await supabase.auth.signOut();
+      const refreshToken = tokenManager.getRefreshToken();
+      if (refreshToken) {
+        await authApi.logout(refreshToken);
+      }
+    } catch (error) {
+      console.error('Logout error:', error);
+    } finally {
+      tokenManager.clearTokens();
       setUser(null);
       setIsAuthenticated(false);
-      localStorage.removeItem('soundmoney_user');
-    } catch (error) {
-      console.error('Logout failed:', error);
-      throw error;
-    } finally {
       setIsLoading(false);
     }
   };
 
   const updateUser = (updatedUser: User) => {
     setUser(updatedUser);
-    localStorage.setItem('soundmoney_user', JSON.stringify(updatedUser));
+    tokenManager.setUser(updatedUser);
   };
 
   return (

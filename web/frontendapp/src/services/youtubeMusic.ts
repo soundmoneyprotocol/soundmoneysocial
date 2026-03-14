@@ -12,6 +12,8 @@ export interface TrackMetadata {
   songwriter?: string;
   credits?: string;
   tags?: string[];
+  isrcCode?: string; // International Standard Recording Code
+  publishingMemberId?: string; // BMI/ASCAP publishing member number
 }
 
 export interface ManagedTrack {
@@ -22,6 +24,9 @@ export interface ManagedTrack {
   streamPrice: string; // BZY per second
   youtubeUrl?: string;
   spotifyUrl?: string;
+  tiktokUrl?: string;
+  instagramReelUrl?: string;
+  bandcampUrl?: string;
   coverUrl?: string;
   fileData?: string; // Base64 encoded file data (audio/video/gif)
   fileType?: string; // MIME type (audio/mpeg, video/mp4, image/gif, etc.)
@@ -52,13 +57,19 @@ class YouTubeMusicService {
     streamPrice: string = '0.0015',
     duration: number = 180,
     spotifyUrl?: string,
-    metadata?: TrackMetadata
+    metadata?: TrackMetadata,
+    tiktokUrl?: string,
+    instagramReelUrl?: string,
+    bandcampUrl?: string
   ): ManagedTrack {
     const track: ManagedTrack = {
       id: `track_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       title,
       artist,
       genre,
+      tiktokUrl,
+      instagramReelUrl,
+      bandcampUrl,
       streamPrice,
       youtubeUrl,
       spotifyUrl,

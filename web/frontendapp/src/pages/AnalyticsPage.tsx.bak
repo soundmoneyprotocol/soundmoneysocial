@@ -1137,23 +1137,18 @@ const AnalyticsPage: React.FC = () => {
               {geoData.map((geo, index) => (
                 <tr
                   key={index}
-                  onClick={() => {
-                    setSelectedGeoCountry(geo);
-                    setShowGeoModal(true);
-                  }}
                   style={{
                     borderBottom: `1px solid ${theme.colors.gray[800]}`,
                     backgroundColor: index % 2 === 0 ? theme.colors.background.secondary : 'transparent',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s ease',
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = theme.colors.primary + '20';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = index % 2 === 0 ? theme.colors.background.secondary : 'transparent';
                   }}
                 >
+                  <td style={{ padding: theme.spacing.md, color: theme.colors.text.primary }}>
+                    <span style={{ marginRight: theme.spacing.xs }}>{geo.flag}</span>
+                    {geo.country}
+                  </td>
+                  <td style={{ padding: theme.spacing.md, color: theme.colors.text.secondary }}>
+                    {geo.region}
+                  </td>
                   <td style={{ padding: theme.spacing.md, textAlign: 'right', color: theme.colors.text.primary, fontWeight: 600 }}>
                     {formatNumber(geo.listeners)}
                   </td>
@@ -1248,179 +1243,6 @@ const AnalyticsPage: React.FC = () => {
         handleAddYoutubeStreams,
         handleDeleteYoutubeEntry,
         'YouTube Music'
-      )}
-
-      {/* Geo Audience Segments Modal */}
-      {showGeoModal && selectedGeoCountry && (
-        <>
-          <div
-            style={{
-              position: 'fixed',
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              backgroundColor: 'rgba(0, 0, 0, 0.7)',
-              zIndex: 1000,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-            onClick={() => setShowGeoModal(false)}
-          />
-          <div
-            style={{
-              position: 'fixed',
-              top: '50%',
-              left: '50%',
-              transform: 'translate(-50%, -50%)',
-              backgroundColor: theme.colors.background.secondary,
-              borderRadius: theme.borderRadius.lg,
-              border: `2px solid ${theme.colors.primary}`,
-              padding: theme.spacing.xl,
-              maxWidth: '700px',
-              maxHeight: '80vh',
-              overflowY: 'auto',
-              zIndex: 1001,
-            }}
-          >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: theme.spacing.lg }}>
-              <h2 style={{ margin: 0, color: theme.colors.text.primary }}>
-                {selectedGeoCountry.flag} {selectedGeoCountry.country} - Audience Segments
-              </h2>
-              <button
-                onClick={() => setShowGeoModal(false)}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  fontSize: '28px',
-                  cursor: 'pointer',
-                  color: theme.colors.text.secondary,
-                }}
-              >
-                ✕
-              </button>
-            </div>
-
-            {/* Country Stats */}
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
-              gap: theme.spacing.md,
-              marginBottom: theme.spacing.lg,
-            }}>
-              <div style={{
-                padding: theme.spacing.md,
-                backgroundColor: theme.colors.background.tertiary,
-                borderRadius: theme.borderRadius.md,
-              }}>
-                <p style={{ margin: 0, fontSize: theme.typography.fontSize.xs, color: theme.colors.text.secondary }}>
-                  Region
-                </p>
-                <p style={{ margin: '8px 0 0 0', fontSize: theme.typography.fontSize.base, fontWeight: 'bold', color: theme.colors.text.primary }}>
-                  {selectedGeoCountry.region}
-                </p>
-              </div>
-              <div style={{
-                padding: theme.spacing.md,
-                backgroundColor: theme.colors.background.tertiary,
-                borderRadius: theme.borderRadius.md,
-              }}>
-                <p style={{ margin: 0, fontSize: theme.typography.fontSize.xs, color: theme.colors.text.secondary }}>
-                  Listeners
-                </p>
-                <p style={{ margin: '8px 0 0 0', fontSize: theme.typography.fontSize.base, fontWeight: 'bold', color: theme.colors.accent }}>
-                  {formatNumber(selectedGeoCountry.listeners)}
-                </p>
-              </div>
-              <div style={{
-                padding: theme.spacing.md,
-                backgroundColor: theme.colors.background.tertiary,
-                borderRadius: theme.borderRadius.md,
-              }}>
-                <p style={{ margin: 0, fontSize: theme.typography.fontSize.xs, color: theme.colors.text.secondary }}>
-                  Engagement
-                </p>
-                <p style={{ margin: '8px 0 0 0', fontSize: theme.typography.fontSize.base, fontWeight: 'bold', color: theme.colors.success }}>
-                  {selectedGeoCountry.engagement}%
-                </p>
-              </div>
-            </div>
-
-            {/* Audience Segments for this Country */}
-            <h3 style={{ margin: `${theme.spacing.lg} 0 ${theme.spacing.md} 0`, color: theme.colors.primary }}>
-              👥 Audience Distribution
-            </h3>
-            
-            {audienceSegments.map((segment) => (
-              <div
-                key={segment.id}
-                style={{
-                  padding: theme.spacing.md,
-                  backgroundColor: theme.colors.background.tertiary,
-                  borderRadius: theme.borderRadius.md,
-                  marginBottom: theme.spacing.md,
-                  borderLeft: `4px solid ${segment.color}`,
-                }}
-              >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: theme.spacing.sm }}>
-                  <h4 style={{ margin: 0, color: segment.color }}>
-                    {segment.title}
-                  </h4>
-                  <span style={{ color: theme.colors.text.secondary, fontSize: theme.typography.fontSize.sm }}>
-                    {Math.round((segment.count * selectedGeoCountry.percentage) / 100)} listeners
-                  </span>
-                </div>
-                <div style={{
-                  width: '100%',
-                  height: '6px',
-                  backgroundColor: theme.colors.background.secondary,
-                  borderRadius: theme.borderRadius.sm,
-                  overflow: 'hidden',
-                }}>
-                  <div style={{
-                    width: `${segment.percentage}%`,
-                    height: '100%',
-                    backgroundColor: segment.color,
-                  }} />
-                </div>
-                <p style={{ margin: '8px 0 0 0', fontSize: theme.typography.fontSize.xs, color: theme.colors.text.secondary }}>
-                  {segment.engagementLevel === 'super' && '⭐ Highly engaged fans'}
-                  {segment.engagementLevel === 'moderate' && '🎯 Regular listeners'}
-                  {segment.engagementLevel === 'light' && '📱 Casual listeners'}
-                </p>
-              </div>
-            ))}
-
-            {/* Export Option */}
-            <button
-              onClick={() => {
-                const csv = [`country,region,segment,listener_count,engagement\n${selectedGeoCountry.country},${selectedGeoCountry.region}`, ...audienceSegments.map(s => `"${s.title}",${Math.round((s.count * selectedGeoCountry.percentage) / 100)},${s.percentage}`)].join('\n');
-                const element = document.createElement('a');
-                element.setAttribute('href', 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv));
-                element.setAttribute('download', `${selectedGeoCountry.country}-audience-segments.csv`);
-                element.style.display = 'none';
-                document.body.appendChild(element);
-                element.click();
-                document.body.removeChild(element);
-                alert(`📥 ${selectedGeoCountry.country} audience segments exported`);
-              }}
-              style={{
-                width: '100%',
-                padding: `${theme.spacing.md} ${theme.spacing.lg}`,
-                backgroundColor: theme.colors.primary,
-                color: 'white',
-                border: 'none',
-                borderRadius: theme.borderRadius.md,
-                cursor: 'pointer',
-                fontWeight: 600,
-                marginTop: theme.spacing.lg,
-              }}
-            >
-              📥 Export Audience Data
-            </button>
-          </div>
-        </>
       )}
     </Container>
   );

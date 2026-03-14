@@ -21,10 +21,10 @@ interface ProfileMenuItem {
 }
 
 const navItems: NavItem[] = [
-  { label: 'Feed', path: '/', icon: '🏠' },
-  { label: 'Analytics', path: '/analytics', icon: '📊' },
-  { label: 'Music Portal', path: '/music-portal', icon: '🎵' },
-  { label: 'Dashboard', path: '/dashboard', icon: '👤' },
+  { label: 'Feed', path: '/', icon: '' },
+  { label: 'Analytics', path: '/analytics', icon: '' },
+  { label: 'Music Portal', path: '/music-portal', icon: '' },
+  { label: 'Dashboard', path: '/dashboard', icon: '' },
 ];
 
 const Navigation: React.FC = () => {
@@ -204,9 +204,13 @@ const Navigation: React.FC = () => {
   const logoStyles: React.CSSProperties = {
     fontSize: theme.typography.fontSize.xl,
     fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.primary,
+    background: 'linear-gradient(135deg, #00bbff 0%, #9c42f5 100%)',
+    backgroundClip: 'text',
+    WebkitBackgroundClip: 'text',
+    WebkitTextFillColor: 'transparent',
     textDecoration: 'none',
     marginRight: theme.spacing.lg,
+    transition: 'all 0.3s ease',
   };
 
   const navListStyles: React.CSSProperties = {
@@ -250,7 +254,7 @@ const Navigation: React.FC = () => {
     cursor: 'pointer',
     fontSize: theme.typography.fontSize.sm,
     fontWeight: theme.typography.fontWeight.medium,
-    transition: 'all 0.2s ease',
+    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
   };
 
   const dropdownStyles: React.CSSProperties = {
