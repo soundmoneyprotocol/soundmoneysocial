@@ -86,7 +86,7 @@ const Navigation: React.FC = () => {
           setShowProfileDropdown(false);
         },
       });
-    } else if (tier === 'pro') {
+    } else if (tier === 'artist-pro') {
       baseItems.push({
         label: 'Artist Pro',
         icon: '🎤',
@@ -105,7 +105,7 @@ const Navigation: React.FC = () => {
         action: () => {
           if (isTeamPlan) {
             navigate('/team');
-          } else if (tier === 'pro') {
+          } else if (tier === 'artist-pro') {
             navigate('/pro-artist');
           } else {
             setShowSubscriptionModal(true);

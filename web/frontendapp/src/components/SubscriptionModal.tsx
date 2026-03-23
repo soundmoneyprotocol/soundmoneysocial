@@ -3,7 +3,7 @@ import Card from './Card';
 import Button from './Button';
 import Badge from './Badge';
 import { theme } from '../theme/theme';
-import { useSubscription } from '../contexts/SubscriptionContext';
+import { useSubscription, SubscriptionTier } from '../contexts/SubscriptionContext';
 import { useNavigate } from 'react-router-dom';
 
 interface SubscriptionModalProps {
@@ -15,7 +15,7 @@ interface SubscriptionModalProps {
 type SubscriptionTab = 'plans' | 'dashboard' | 'team' | 'referrals';
 
 interface Plan {
-  id: string;
+  id: SubscriptionTier;
   name: string;
   price: number;
   bezyMultiplier: number;
@@ -31,14 +31,16 @@ export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
   const [activeTab, setActiveTab] = useState<SubscriptionTab>('plans');
   const [referralCode, setReferralCode] = useState('REF-' + Math.random().toString(36).substr(2, 9).toUpperCase());
   const [teamEmail, setTeamEmail] = useState('');
-  
-  const { tier, upgradePlan } = useSubscription();
+
+  const { tier, upgradePlan, isOnTrial } = useSubscription();
   const navigate = useNavigate();
-  const currentPlan = tier === 'free' ? 'free' : tier === 'pro' ? 'pro' : 'team';
+
+  // Map tier to display tier for comparison (trials map to their paid equivalent)
+  const displayTier = tier.startsWith('trial') ? 'soundmoney-ai' : tier;
 
   const plans: Plan[] = [
     {
-      id: 'free',
+      id: 'soundmoney-ai',
       name: 'Creator',
       price: 0,
       bezyMultiplier: 1,
@@ -50,7 +52,7 @@ export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
       ],
     },
     {
-      id: 'pro',
+      id: 'artist-pro',
       name: 'Pro Artist',
       price: 9.99,
       bezyMultiplier: 1.5,
@@ -95,17 +97,17 @@ export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
     setTeamEmail('');
   };
 
-  const handleUpgrade = (planId: string) => {
-    if (planId === currentPlan) {
+  const handleUpgrade = (planId: SubscriptionTier) => {
+    if (planId === displayTier) {
       alert('You are already on this plan');
       return;
     }
     const planName = plans.find(p => p.id === planId)?.name;
     alert(`✅ Upgraded to ${planName}!`);
-    upgradePlan(planId as any);
-    
+    upgradePlan(planId);
+
     // Navigate to appropriate page based on plan
-    if (planId === 'pro') {
+    if (planId === 'artist-pro') {
       setTimeout(() => {
         onClose();
         navigate('/pro-artist');
@@ -245,11 +247,11 @@ export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
                 </div>
 
                 <Button
-                  variant={currentPlan === plan.id ? 'secondary' : 'primary'}
+                  variant={displayTier === plan.id ? 'secondary' : 'primary'}
                   onClick={() => handleUpgrade(plan.id)}
                   style={{ width: '100%' }}
                 >
-                  {currentPlan === plan.id ? '✓ Current Plan' : `Upgrade to ${plan.name}`}
+                  {displayTier === plan.id ? '✓ Current Plan' : `Upgrade to ${plan.name}`}
                 </Button>
               </Card>
             ))}

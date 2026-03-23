@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Container, Header, Card, Button, Badge } from '../components';
 import { theme } from '../theme/theme';
 import EmbedWidget from '../components/EmbedWidget';
-import { useSubscription } from '../contexts/SubscriptionContext';
+import { useSubscription, SubscriptionTier } from '../contexts/SubscriptionContext';
 
 interface TeamMember {
   id: string;
@@ -97,6 +97,23 @@ const TeamPage: React.FC = () => {
   ]);
   const [showNewApiModal, setShowNewApiModal] = useState(false);
   const [selectedIntegration, setSelectedIntegration] = useState<ApiIntegration | null>(null);
+
+  // Map tier to display name (handling trials and actual subscriptions)
+  const getTierDisplayName = (): string => {
+    if (tier.startsWith('trial')) {
+      return 'Creator (Trial)';
+    }
+    switch (tier) {
+      case 'soundmoney-ai':
+        return 'Creator';
+      case 'artist-pro':
+        return 'Pro Artist';
+      case 'team':
+        return 'Team/Label';
+      default:
+        return 'Creator';
+    }
+  };
 
   const handleInviteTeamMember = () => {
     if (!inviteEmail.trim()) {
@@ -280,7 +297,7 @@ const TeamPage: React.FC = () => {
                 Subscription Tier
               </p>
               <p style={{ margin: 0, fontSize: '32px', fontWeight: 'bold', color: theme.colors.primary, textTransform: 'capitalize' }}>
-                {tier === 'free' ? 'Creator' : tier === 'pro' ? 'Pro' : 'Team/Label'}
+                {getTierDisplayName()}
               </p>
               <p style={{ margin: 0, marginTop: '4px', color: theme.colors.accent, fontSize: theme.typography.fontSize.sm, fontWeight: '600' }}>
                 {bezyMultiplier}x BZY Multiplier
