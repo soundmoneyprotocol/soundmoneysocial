@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 
-export type SubscriptionTier = 'free' | 'pro' | 'team';
+export type SubscriptionTier = 'trial-24h' | 'trial-48h' | 'soundmoney-ai' | 'artist-pro' | 'team';
 
 export interface SubscriptionContextType {
   tier: SubscriptionTier;
@@ -10,17 +10,22 @@ export interface SubscriptionContextType {
   isTeamPlan: boolean;
   isProPlan: boolean;
   upgradePlan: (newTier: SubscriptionTier) => void;
+  trial?: boolean;
+  trialTimeRemaining?: number;
+  extendTrial?: () => void;
+  isOnTrial?: boolean;
 }
 
 const SubscriptionContext = createContext<SubscriptionContextType | undefined>(undefined);
 
 export const SubscriptionProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [tier, setTierState] = useState<SubscriptionTier>('free');
+  const [tier, setTierState] = useState<SubscriptionTier>('soundmoney-ai');
 
   // Load subscription tier from localStorage on mount
   useEffect(() => {
     const storedTier = localStorage.getItem('soundmoney_subscription_tier') as SubscriptionTier | null;
-    if (storedTier && ['free', 'pro', 'team'].includes(storedTier)) {
+    const validTiers: SubscriptionTier[] = ['trial-24h', 'trial-48h', 'soundmoney-ai', 'artist-pro', 'team'];
+    if (storedTier && validTiers.includes(storedTier)) {
       setTierState(storedTier);
     }
   }, []);
@@ -39,19 +44,23 @@ export const SubscriptionProvider: React.FC<{ children: ReactNode }> = ({ childr
   };
 
   const bezyMultipliers: Record<SubscriptionTier, number> = {
-    free: 1,
-    pro: 1.5,
-    team: 2,
+    'trial-24h': 1,
+    'trial-48h': 1,
+    'soundmoney-ai': 1,
+    'artist-pro': 1.5,
+    'team': 2,
   };
 
   const teamMembersLimits: Record<SubscriptionTier, number> = {
-    free: 1,
-    pro: 5,
-    team: 999,
+    'trial-24h': 1,
+    'trial-48h': 1,
+    'soundmoney-ai': 1,
+    'artist-pro': 5,
+    'team': 999,
   };
 
   const isTeamPlan = tier === 'team';
-  const isProPlan = tier === 'pro' || isTeamPlan;
+  const isProPlan = tier === 'artist-pro';
 
   const value: SubscriptionContextType = {
     tier,
@@ -61,6 +70,8 @@ export const SubscriptionProvider: React.FC<{ children: ReactNode }> = ({ childr
     isTeamPlan,
     isProPlan,
     upgradePlan,
+    trial: tier.startsWith('trial'),
+    isOnTrial: tier.startsWith('trial'),
   };
 
   return (
@@ -70,10 +81,10 @@ export const SubscriptionProvider: React.FC<{ children: ReactNode }> = ({ childr
   );
 };
 
-export const useSubscription = () => {
+export const useSubscription = (): SubscriptionContextType => {
   const context = useContext(SubscriptionContext);
   if (!context) {
-    throw new Error('useSubscription must be used within SubscriptionProvider');
+    throw new Error('useSubscription must be used within a SubscriptionProvider');
   }
   return context;
 };
