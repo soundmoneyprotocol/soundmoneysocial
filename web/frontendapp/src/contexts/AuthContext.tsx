@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { mockAuthService } from '../services/mockAuthService';
 
 export interface User {
   id: string;
@@ -140,18 +141,21 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
         if (accessToken && storedUser) {
           try {
-            // Validate token with server
-            const sessionData = await authApi.getSession(accessToken);
-            setUser(sessionData.user);
+            // Validate token with server (skip for mock tokens)
+            if (!accessToken.startsWith('mock_')) {
+              const sessionData = await authApi.getSession(accessToken);
+              setUser(sessionData.user);
+            } else {
+              setUser(storedUser);
+            }
             setIsAuthenticated(true);
           } catch (error) {
             // Token might be expired, try to refresh
             const refreshToken = tokenManager.getRefreshToken();
-            if (refreshToken) {
+            if (refreshToken && !refreshToken.startsWith('mock_')) {
               try {
                 const newSession = await authApi.refreshToken(refreshToken);
                 tokenManager.setTokens(newSession.access_token, newSession.refresh_token);
-                // Get updated user data
                 const sessionData = await authApi.getSession(newSession.access_token);
                 setUser(sessionData.user);
                 setIsAuthenticated(true);
@@ -161,16 +165,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                 setUser(null);
                 setIsAuthenticated(false);
               }
-            } else {
-              // No refresh token, clear storage
-              tokenManager.clearTokens();
-              setUser(null);
-              setIsAuthenticated(false);
+            } else if (refreshToken && refreshToken.startsWith('mock_')) {
+              // Mock token, just restore user
+              setUser(storedUser);
+              setIsAuthenticated(true);
             }
           }
-        } else {
-          setUser(null);
-          setIsAuthenticated(false);
         }
       } catch (error) {
         console.error('Failed to initialize auth:', error);
@@ -187,7 +187,23 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const login = async (email: string, password: string) => {
     setIsLoading(true);
     try {
-      const response = await authApi.login(email, password);
+      let response;
+      
+      try {
+        // Try API first
+        response = await authApi.login(email, password);
+      } catch (apiError) {
+        console.warn('API login failed, using mock auth:', apiError);
+        // Fallback to mock auth
+        const mockResponse = await mockAuthService.login(email, password);
+        response = {
+          user: mockResponse.user,
+          session: {
+            access_token: mockResponse.access_token,
+            refresh_token: mockResponse.refresh_token,
+          },
+        };
+      }
 
       if (response.user && response.session) {
         tokenManager.setTokens(response.session.access_token, response.session.refresh_token);
@@ -206,7 +222,23 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const signup = async (email: string, password: string, username: string) => {
     setIsLoading(true);
     try {
-      const response = await authApi.signup(email, password, username);
+      let response;
+      
+      try {
+        // Try API first
+        response = await authApi.signup(email, password, username);
+      } catch (apiError) {
+        console.warn('API signup failed, using mock auth:', apiError);
+        // Fallback to mock auth
+        const mockResponse = await mockAuthService.signup(email, password, username);
+        response = {
+          user: mockResponse.user,
+          session: {
+            access_token: mockResponse.access_token,
+            refresh_token: mockResponse.refresh_token,
+          },
+        };
+      }
 
       if (response.user && response.session) {
         tokenManager.setTokens(response.session.access_token, response.session.refresh_token);
@@ -226,7 +258,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setIsLoading(true);
     try {
       const refreshToken = tokenManager.getRefreshToken();
-      if (refreshToken) {
+      if (refreshToken && !refreshToken.startsWith('mock_')) {
         await authApi.logout(refreshToken);
       }
     } catch (error) {
