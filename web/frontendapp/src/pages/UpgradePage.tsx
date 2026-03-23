@@ -34,7 +34,7 @@ export const UpgradePage: React.FC = () => {
   useEffect(() => {
     if (successParam === 'true' && trialExtendedParam === 'extended') {
       setSuccess(true);
-      extendTrial();
+      if (extendTrial) extendTrial();
       setShowBanner(false);
       // Show success message for 3 seconds then redirect
       setTimeout(() => {
@@ -200,7 +200,7 @@ export const UpgradePage: React.FC = () => {
       )}
 
       {/* Trial Time Remaining */}
-      {trial && trialTimeRemaining > 0 && reason !== 'trial-expired' && (
+      {trial && trialTimeRemaining && trialTimeRemaining > 0 && reason !== 'trial-expired' && (
         <div
           style={{
             marginBottom: theme.spacing.xl,
