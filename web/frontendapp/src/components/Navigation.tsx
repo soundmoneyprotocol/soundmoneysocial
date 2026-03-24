@@ -21,7 +21,7 @@ interface ProfileMenuItem {
 }
 
 const navItems: NavItem[] = [
-  { label: 'Feed', path: '/', icon: '' },
+  { label: 'Distribute', path: '/', icon: '' },
   { label: 'Analytics', path: '/analytics', icon: '' },
   { label: 'Music Portal', path: '/music-portal', icon: '' },
   { label: 'Dashboard', path: '/dashboard', icon: '' },
