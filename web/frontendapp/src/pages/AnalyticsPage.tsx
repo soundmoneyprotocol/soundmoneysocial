@@ -397,7 +397,7 @@ const AnalyticsPage: React.FC = () => {
 
   const chartBarContainerStyles: React.CSSProperties = {
     display: 'flex',
-    alignItems: 'flex-end',
+    alignItems: 'flex-start',
     justifyContent: 'space-around',
     height: '200px',
     padding: theme.spacing.lg,
