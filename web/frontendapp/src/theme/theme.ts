@@ -1,6 +1,6 @@
 export const theme = {
   colors: {
-    // Primary - Changed to SoundMoney Orange
+    // Primary - SoundMoney Orange
     primary: '#FF8C00', // SoundMoney Orange
     secondary: '#191414', // Dark background
     accent: '#FFA500', // Bright Orange
@@ -22,10 +22,10 @@ export const theme = {
     },
 
     // Status
-    success: '#FF8C00', // Changed to orange
+    success: '#FF8C00', // SoundMoney Orange
     warning: '#FFB81C',
     danger: '#E22134',
-    info: '#FFA500', // Changed to orange
+    info: '#FFA500', // Bright Orange
 
     // Text
     text: {
