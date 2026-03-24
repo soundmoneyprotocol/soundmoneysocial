@@ -406,9 +406,11 @@ const AnalyticsPage: React.FC = () => {
     gap: theme.spacing.md,
   };
 
+  const maxViews = Math.max(...analytics.timeSeriesData.map(d => d.views), 1);
+
   const barStyles: (height: number) => React.CSSProperties = (height) => ({
     flex: 1,
-    height: `${(height / 3200) * 100}%`,
+    height: `${(height / maxViews) * 100}%`,
     backgroundColor: theme.colors.primary,
     borderRadius: theme.borderRadius.sm,
     minHeight: '20px',
