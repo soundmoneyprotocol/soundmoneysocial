@@ -1,9 +1,9 @@
 export const theme = {
   colors: {
-    // Primary
-    primary: '#1DB954', // Spotify green
+    // Primary - SoundMoney Orange
+    primary: '#FF8C00', // SoundMoney Orange
     secondary: '#191414', // Dark background
-    accent: '#1ed760', // Bright green
+    accent: '#FFA500', // Bright Orange
 
     // Neutrals
     white: '#FFFFFF',
@@ -22,10 +22,10 @@ export const theme = {
     },
 
     // Status
-    success: '#1DB954',
+    success: '#FF8C00', // SoundMoney Orange
     warning: '#FFB81C',
     danger: '#E22134',
-    info: '#1ED760',
+    info: '#FFA500', // Bright Orange
 
     // Text
     text: {
