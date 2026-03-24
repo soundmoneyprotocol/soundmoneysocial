@@ -336,7 +336,7 @@ const YouTubeMusicPortalPage: React.FC = () => {
   return (
     <Container maxWidth="lg" padding="lg">
       <Header
-        title="Music Portal"
+        title="Marketing Portal"
         subtitle="Manage your streaming track catalog"
       />
 

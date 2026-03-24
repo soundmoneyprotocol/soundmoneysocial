@@ -61,7 +61,7 @@ const FeedPage: React.FC = () => {
         const spotifyTracks = await spotifyService.searchTracksByGenre(selectedGenre, 20);
         const appTracks = spotifyTracks.map(track => spotifyService.convertToAppTrack(track));
 
-        // Get uploaded tracks from Music Portal
+        // Get uploaded tracks from Marketing Portal
         const uploadedTracksData = youtubeMusicService.getTracksByGenre(selectedGenre);
         
         // Convert uploaded tracks and fetch file data if available

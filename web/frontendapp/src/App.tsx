@@ -40,7 +40,7 @@ const pageMetadata: { [key: string]: { title: string; description: string } } = 
     description: "Track your performance and engagement analytics",
   },
   "/music-portal": {
-    title: "Music Portal - SoundMoney",
+    title: "Marketing Portal - SoundMoney",
     description: "Manage your streaming track catalog and view earnings",
   },
   "/community": {
