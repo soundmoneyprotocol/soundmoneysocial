@@ -68,12 +68,12 @@ const AnalyticsPage: React.FC = () => {
     ],
     timeSeriesData: [
       { date: 'Mon', views: 1200 },
-      { date: 'Tue', views: 1900 },
-      { date: 'Wed', views: 1500 },
-      { date: 'Thu', views: 2200 },
-      { date: 'Fri', views: 2800 },
-      { date: 'Sat', views: 3200 },
-      { date: 'Sun', views: 2400 },
+      { date: 'Tue', views: 2100 },
+      { date: 'Wed', views: 3200 },
+      { date: 'Thu', views: 4800 },
+      { date: 'Fri', views: 6500 },
+      { date: 'Sat', views: 8200 },
+      { date: 'Sun', views: 9500 },
     ],
   });
 
@@ -397,7 +397,7 @@ const AnalyticsPage: React.FC = () => {
 
   const chartBarContainerStyles: React.CSSProperties = {
     display: 'flex',
-    alignItems: 'flex-end',
+    alignItems: 'flex-start',
     justifyContent: 'space-around',
     height: '200px',
     padding: theme.spacing.lg,
@@ -406,9 +406,11 @@ const AnalyticsPage: React.FC = () => {
     gap: theme.spacing.md,
   };
 
+  const maxViews = Math.max(...analytics.timeSeriesData.map(d => d.views), 1);
+
   const barStyles: (height: number) => React.CSSProperties = (height) => ({
     flex: 1,
-    height: `${(height / 3200) * 100}%`,
+    height: `${(height / maxViews) * 100}%`,
     backgroundColor: theme.colors.primary,
     borderRadius: theme.borderRadius.sm,
     minHeight: '20px',

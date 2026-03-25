@@ -1,6 +1,6 @@
 /**
  * SoundMoney API Client
- * Centralized HTTP client for api.soundmoneyprotocol.xyz
+ * Centralized HTTP client for os.soundmoneyprotocol.xyz
  * Used by: Mobile app (React Native) + PWA (soundmoneysocial)
  */
 

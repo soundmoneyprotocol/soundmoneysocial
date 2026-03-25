@@ -51,7 +51,7 @@ export {
  *
  * // In your App.tsx or main.tsx
  * const apiClient = SoundMoneyApiClient.initialize({
- *   baseURL: 'https://api.soundmoneyprotocol.xyz',
+ *   baseURL: 'https://os.soundmoneyprotocol.xyz',
  *   timeout: 30000,
  * });
  *
@@ -65,7 +65,7 @@ export {
  * });
  * ```
  */
-export function initializeApiServices(baseURL: string = 'https://api.soundmoneyprotocol.xyz') {
+export function initializeApiServices(baseURL: string = 'https://os.soundmoneyprotocol.xyz') {
   // Initialize API client
   const apiClient = SoundMoneyApiClient.initialize({
     baseURL,
