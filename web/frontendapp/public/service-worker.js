@@ -16,7 +16,7 @@ const ASSETS_TO_CACHE = [
 
 const API_ENDPOINTS = [
   '/api/',
-  'https://api.soundmoneyprotocol.xyz',
+  'https://os.soundmoneyprotocol.xyz',
 ];
 
 /**

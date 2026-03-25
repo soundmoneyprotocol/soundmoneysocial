@@ -22,7 +22,7 @@ module.exports = {
     {
       urlPattern: ({ url }) =>
         url.pathname.startsWith('/api/') ||
-        url.origin.includes('api.soundmoneyprotocol.xyz'),
+        url.origin.includes('os.soundmoneyprotocol.xyz'),
       handler: 'NetworkFirst',
       options: {
         cacheName: 'soundmoney-api-cache',

@@ -2,7 +2,7 @@
 
 ## Overview
 
-This guide explains how to integrate the centralized SoundMoney API (`api.soundmoneyprotocol.xyz`) into your applications:
+This guide explains how to integrate the centralized SoundMoney API (`os.soundmoneyprotocol.xyz`) into your applications:
 
 - 📱 **Mobile App** (React Native) - soundmoneyapp
 - 🌐 **PWA Web App** (React) - soundmoneysocial at `app.soundmoneyprotocol.xyz`
@@ -15,7 +15,7 @@ The API services are **platform-agnostic** and work seamlessly on both mobile an
 
 ```
 ┌─────────────────────────────────────────────────────────┐
-│         api.soundmoneyprotocol.xyz (Backend)            │
+│         os.soundmoneyprotocol.xyz (Backend)            │
 ├─────────────────────────────────────────────────────────┤
 │  • Auth (signup, signin, token refresh)                │
 │  • Artist Dashboard (streaming, copyright, DeFi)       │
@@ -52,7 +52,7 @@ import { initializeApiServices } from '@/services/api';
 
 // Initialize all API services
 const { apiClient, authService, dashboardService } = initializeApiServices(
-  'https://api.soundmoneyprotocol.xyz'
+  'https://os.soundmoneyprotocol.xyz'
 );
 
 // Services are now ready to use globally
@@ -68,7 +68,7 @@ import { initializeApiServices } from '@/services/api';
 function App() {
   useEffect(() => {
     // Initialize API services
-    initializeApiServices('https://api.soundmoneyprotocol.xyz');
+    initializeApiServices('https://os.soundmoneyprotocol.xyz');
   }, []);
 
   return (
@@ -84,7 +84,7 @@ import { initializeApiServices } from '@/services/api';
 
 // In your app entry point
 const { apiClient, authService, dashboardService } = initializeApiServices(
-  'https://api.soundmoneyprotocol.xyz'
+  'https://os.soundmoneyprotocol.xyz'
 );
 
 // Identical API to PWA!
@@ -355,7 +355,7 @@ const isHealthy = await apiClient.health();
 
 ```env
 # API Configuration
-REACT_APP_API_BASE_URL=https://api.soundmoneyprotocol.xyz
+REACT_APP_API_BASE_URL=https://os.soundmoneyprotocol.xyz
 REACT_APP_API_TIMEOUT=30000
 
 # Supabase (if still using for real-time)
@@ -369,7 +369,7 @@ REACT_APP_STRIPE_PUBLISHABLE_KEY=pk_live_your_key
 ### Usage
 
 ```typescript
-const baseURL = process.env.REACT_APP_API_BASE_URL || 'https://api.soundmoneyprotocol.xyz';
+const baseURL = process.env.REACT_APP_API_BASE_URL || 'https://os.soundmoneyprotocol.xyz';
 
 const { apiClient, authService, dashboardService } = initializeApiServices(baseURL);
 ```
@@ -482,7 +482,7 @@ import { AuthService, initializeApiServices } from '@/services/api';
 
 describe('Auth Service', () => {
   beforeAll(() => {
-    initializeApiServices('https://api.soundmoneyprotocol.xyz');
+    initializeApiServices('https://os.soundmoneyprotocol.xyz');
   });
 
   test('should sign in user', async () => {
@@ -589,6 +589,6 @@ const user = await authService.getCurrentUser();
 ## Support
 
 For API endpoint details and requirements, contact your backend team or check:
-- `https://api.soundmoneyprotocol.xyz/docs` (if available)
+- `https://os.soundmoneyprotocol.xyz/docs` (if available)
 - Your backend API documentation
 - Postman collection (if available)
