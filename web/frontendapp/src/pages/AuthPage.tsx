@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Card, Button, Input, Loading } from '../components';
 import { useAuth } from '../contexts/AuthContext';
 import { theme } from '../theme/theme';
@@ -9,6 +9,8 @@ type AuthState = 'form' | 'email-confirmation';
 
 const AuthPage: React.FC = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const referralCode = searchParams.get('referral') ?? undefined;
   const { login, signup } = useAuth();
   const [mode, setMode] = useState<AuthMode>('login');
   const [authState, setAuthState] = useState<AuthState>('form');
@@ -91,7 +93,7 @@ const AuthPage: React.FC = () => {
     setSuccess('');
 
     try {
-      await signup(email, password, username);
+      await signup(email, password, username, referralCode);
       setAuthState('email-confirmation');
     } catch (err: any) {
       setError(err.message || 'Failed to create account. Please try again.');

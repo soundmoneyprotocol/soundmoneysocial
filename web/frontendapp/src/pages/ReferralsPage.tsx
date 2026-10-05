@@ -1,84 +1,79 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Header, Card, Button, Badge } from '../components';
+import { Container, Header, Card, Button, Badge, Loading } from '../components';
 import { theme } from '../theme/theme';
 import { useAuth } from '../contexts/AuthContext';
+import { supabase } from '../services/supabaseClient';
 import { useNavigate } from 'react-router-dom';
 
 interface ReferredUser {
-  id: string;
-  email: string;
-  username: string;
-  status: 'active' | 'pending' | 'inactive';
-  signupDate: string;
-  totalEarned: number;
-  lastActivity: string;
+  usedByUserId: string;
+  usedAt: string;
 }
 
-interface ReferralStats {
-  totalReferrals: number;
-  activeReferrals: number;
-  totalEarningsFromReferrals: number;
-  pendingEarnings: number;
-  referralRate: number;
+function generateReferralCode(userId: string): string {
+  return `REF${userId.substring(0, 8).toUpperCase()}${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
 }
 
 const ReferralsPage: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [referralCode] = useState(() => {
-    let code = localStorage.getItem('referral_code');
-    if (!code) {
-      code = `REF${user?.id?.substring(0, 8).toUpperCase()}${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
-      localStorage.setItem('referral_code', code);
-    }
-    return code;
-  });
+  const [referralCode, setReferralCode] = useState<string | null>(null);
+  const [referredUsers, setReferredUsers] = useState<ReferredUser[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const [referredUsers, setReferredUsers] = useState<ReferredUser[]>([
-    {
-      id: '1',
-      email: 'artist@example.com',
-      username: 'artist_one',
-      status: 'active',
-      signupDate: '2026-02-15',
-      totalEarned: 150.50,
-      lastActivity: '2026-03-12 14:32',
-    },
-    {
-      id: '2',
-      email: 'musician@example.com',
-      username: 'musician_two',
-      status: 'active',
-      signupDate: '2026-02-20',
-      totalEarned: 200.75,
-      lastActivity: '2026-03-11 10:15',
-    },
-    {
-      id: '3',
-      email: 'producer@example.com',
-      username: 'producer_three',
-      status: 'pending',
-      signupDate: '2026-03-10',
-      totalEarned: 0,
-      lastActivity: '2026-03-10 09:45',
-    },
-  ]);
+  useEffect(() => {
+    if (!user) return;
 
-  const [stats, setStats] = useState<ReferralStats>(() => {
-    const active = referredUsers.filter(u => u.status === 'active').length;
-    const total = referredUsers.length;
-    const earnings = referredUsers.reduce((sum, u) => sum + u.totalEarned, 0);
-    return {
-      totalReferrals: total,
-      activeReferrals: active,
-      totalEarningsFromReferrals: earnings,
-      pendingEarnings: 75.25,
-      referralRate: active > 0 ? (active / total) * 100 : 0,
+    const loadReferrals = async () => {
+      setIsLoading(true);
+      setError(null);
+
+      try {
+        const { data: existing, error: fetchError } = await supabase
+          .from('referrals')
+          .select('id, referral_code')
+          .eq('owner_user_id', user.id)
+          .maybeSingle();
+
+        if (fetchError) throw fetchError;
+
+        let referralRow = existing;
+        if (!referralRow) {
+          const { data: created, error: createError } = await supabase
+            .from('referrals')
+            .insert({ owner_user_id: user.id, referral_code: generateReferralCode(user.id) })
+            .select('id, referral_code')
+            .single();
+          if (createError) throw createError;
+          referralRow = created;
+        }
+
+        setReferralCode(referralRow.referral_code);
+
+        const { data: used, error: usedError } = await supabase
+          .from('used_referrals')
+          .select('used_by_user_id, used_at')
+          .eq('referral_id', referralRow.id)
+          .order('used_at', { ascending: false });
+
+        if (usedError) throw usedError;
+
+        setReferredUsers(
+          (used ?? []).map((row) => ({ usedByUserId: row.used_by_user_id, usedAt: row.used_at }))
+        );
+      } catch (err: any) {
+        console.error('Failed to load referrals:', err);
+        setError(err.message || 'Failed to load referral data');
+      } finally {
+        setIsLoading(false);
+      }
     };
-  });
 
-  const [showShareModal, setShowShareModal] = useState(false);
-  const referralLink = `${window.location.origin}?referral=${referralCode}`;
+    loadReferrals();
+  }, [user]);
+
+  const referralLink = referralCode ? `${window.location.origin}?referral=${referralCode}` : '';
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
@@ -104,23 +99,15 @@ const ReferralsPage: React.FC = () => {
     marginTop: theme.spacing.sm,
   };
 
-  const statusBadgeStyles: (status: string) => React.CSSProperties = (status) => ({
-    padding: `${theme.spacing.xs} ${theme.spacing.md}`,
-    borderRadius: theme.borderRadius.md,
-    fontSize: theme.typography.fontSize.xs,
-    fontWeight: 600,
-    backgroundColor:
-      status === 'active' ? theme.colors.success :
-      status === 'pending' ? theme.colors.warning :
-      theme.colors.gray[700],
-    color: 'white',
-  });
+  if (isLoading) {
+    return <Loading fullScreen />;
+  }
 
   return (
     <Container maxWidth="lg" padding="lg">
       <Header
         title="🤝 Referral Program"
-        subtitle="Earn BZY by referring friends and creators"
+        subtitle="Invite friends and creators to SoundMoney"
       />
 
       <Button
@@ -132,6 +119,12 @@ const ReferralsPage: React.FC = () => {
         ← Back
       </Button>
 
+      {error && (
+        <Card style={{ padding: theme.spacing.lg, marginBottom: theme.spacing.lg, borderLeft: `4px solid ${theme.colors.warning}` }}>
+          <p style={{ margin: 0, color: theme.colors.warning }}>{error}</p>
+        </Card>
+      )}
+
       {/* Referral Statistics */}
       <div style={{
         display: 'grid',
@@ -140,29 +133,8 @@ const ReferralsPage: React.FC = () => {
         marginBottom: theme.spacing.xl,
       }}>
         <Card style={statCardStyles}>
-          <p style={statValueStyles}>{stats.totalReferrals}</p>
+          <p style={statValueStyles}>{referredUsers.length}</p>
           <p style={statLabelStyles}>Total Referrals</p>
-        </Card>
-
-        <Card style={statCardStyles}>
-          <p style={{ ...statValueStyles, color: theme.colors.success }}>
-            {stats.activeReferrals}
-          </p>
-          <p style={statLabelStyles}>Active Users</p>
-        </Card>
-
-        <Card style={statCardStyles}>
-          <p style={{ ...statValueStyles, color: theme.colors.accent }}>
-            {stats.totalEarningsFromReferrals.toFixed(2)} BZY
-          </p>
-          <p style={statLabelStyles}>Total Earned</p>
-        </Card>
-
-        <Card style={statCardStyles}>
-          <p style={{ ...statValueStyles, color: theme.colors.info }}>
-            {stats.referralRate.toFixed(1)}%
-          </p>
-          <p style={statLabelStyles}>Conversion Rate</p>
         </Card>
       </div>
 
@@ -231,7 +203,7 @@ const ReferralsPage: React.FC = () => {
             <Button
               variant="secondary"
               onClick={() => {
-                const text = `Join SoundMoney with my referral code: ${referralCode} and earn BZY together! ${referralLink}`;
+                const text = `Join SoundMoney with my referral code: ${referralCode}! ${referralLink}`;
                 if (navigator.share) {
                   navigator.share({ title: 'SoundMoney Referral', text });
                 } else {
@@ -245,7 +217,7 @@ const ReferralsPage: React.FC = () => {
             <Button
               variant="secondary"
               onClick={() => {
-                const text = `Join SoundMoney with my referral code: ${referralCode} and earn BZY together! ${referralLink}`;
+                const text = `Join SoundMoney with my referral code: ${referralCode}! ${referralLink}`;
                 const email = `mailto:?subject=Join SoundMoney&body=${encodeURIComponent(text)}`;
                 window.location.href = email;
               }}
@@ -256,86 +228,13 @@ const ReferralsPage: React.FC = () => {
             <Button
               variant="secondary"
               onClick={() => {
-                const text = `Join SoundMoney with my referral code: ${referralCode} and earn BZY together! ${referralLink}`;
+                const text = `Join SoundMoney with my referral code: ${referralCode}! ${referralLink}`;
                 const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`;
                 window.open(twitterUrl, '_blank');
               }}
             >
               𝕏 Tweet
             </Button>
-          </div>
-        </div>
-
-        <div style={{
-          padding: theme.spacing.md,
-          backgroundColor: theme.colors.background.tertiary,
-          borderRadius: theme.borderRadius.md,
-          borderLeft: `4px solid ${theme.colors.info}`,
-        }}>
-          <p style={{ margin: 0, color: theme.colors.info, fontSize: theme.typography.fontSize.sm, fontWeight: 600 }}>
-            💡 How it works:
-          </p>
-          <p style={{ margin: 0, marginTop: theme.spacing.xs, color: theme.colors.text.secondary, fontSize: theme.typography.fontSize.sm }}>
-            Friends who sign up with your code earn you 10% of their first month earnings. Both of you get a 5% bonus!
-          </p>
-        </div>
-      </Card>
-
-      {/* Referral Earnings Breakdown */}
-      <Card style={{ padding: theme.spacing.lg, marginBottom: theme.spacing.lg }}>
-        <h3 style={{ margin: 0, marginBottom: theme.spacing.lg, color: theme.colors.text.primary }}>
-          💰 Earnings Breakdown
-        </h3>
-
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: '1fr 1fr',
-          gap: theme.spacing.lg,
-        }}>
-          <div style={{
-            padding: theme.spacing.md,
-            backgroundColor: theme.colors.background.tertiary,
-            borderRadius: theme.borderRadius.md,
-          }}>
-            <p style={{
-              margin: 0,
-              marginBottom: theme.spacing.sm,
-              color: theme.colors.text.secondary,
-              fontSize: theme.typography.fontSize.sm,
-            }}>
-              Confirmed Earnings
-            </p>
-            <p style={{
-              margin: 0,
-              fontSize: theme.typography.fontSize.xxl,
-              fontWeight: 'bold',
-              color: theme.colors.success,
-            }}>
-              {stats.totalEarningsFromReferrals.toFixed(2)} BZY
-            </p>
-          </div>
-
-          <div style={{
-            padding: theme.spacing.md,
-            backgroundColor: theme.colors.background.tertiary,
-            borderRadius: theme.borderRadius.md,
-          }}>
-            <p style={{
-              margin: 0,
-              marginBottom: theme.spacing.sm,
-              color: theme.colors.text.secondary,
-              fontSize: theme.typography.fontSize.sm,
-            }}>
-              Pending Earnings
-            </p>
-            <p style={{
-              margin: 0,
-              fontSize: theme.typography.fontSize.xxl,
-              fontWeight: 'bold',
-              color: theme.colors.warning,
-            }}>
-              {stats.pendingEarnings.toFixed(2)} BZY
-            </p>
           </div>
         </div>
       </Card>
@@ -351,7 +250,7 @@ const ReferralsPage: React.FC = () => {
           <h3 style={{ margin: 0, color: theme.colors.text.primary }}>
             👥 People You've Referred
           </h3>
-          <Badge variant="success">{stats.totalReferrals}</Badge>
+          <Badge variant="success">{referredUsers.length}</Badge>
         </div>
 
         {referredUsers.length > 0 ? (
@@ -366,46 +265,19 @@ const ReferralsPage: React.FC = () => {
                   <th style={{ textAlign: 'left', padding: theme.spacing.md, color: theme.colors.text.secondary }}>
                     User
                   </th>
-                  <th style={{ textAlign: 'center', padding: theme.spacing.md, color: theme.colors.text.secondary }}>
-                    Status
-                  </th>
-                  <th style={{ textAlign: 'center', padding: theme.spacing.md, color: theme.colors.text.secondary }}>
-                    Signup Date
-                  </th>
                   <th style={{ textAlign: 'right', padding: theme.spacing.md, color: theme.colors.text.secondary }}>
-                    Your Earnings
-                  </th>
-                  <th style={{ textAlign: 'center', padding: theme.spacing.md, color: theme.colors.text.secondary }}>
-                    Last Active
+                    Signup Date
                   </th>
                 </tr>
               </thead>
               <tbody>
                 {referredUsers.map((referral) => (
-                  <tr key={referral.id} style={{ borderBottom: `1px solid ${theme.colors.gray[800]}` }}>
-                    <td style={{ padding: theme.spacing.md }}>
-                      <div>
-                        <p style={{ margin: 0, color: theme.colors.text.primary, fontWeight: 600 }}>
-                          @{referral.username}
-                        </p>
-                        <p style={{ margin: 0, marginTop: '4px', color: theme.colors.text.secondary, fontSize: theme.typography.fontSize.sm }}>
-                          {referral.email}
-                        </p>
-                      </div>
+                  <tr key={referral.usedByUserId} style={{ borderBottom: `1px solid ${theme.colors.gray[800]}` }}>
+                    <td style={{ padding: theme.spacing.md, fontFamily: 'monospace', fontSize: theme.typography.fontSize.sm }}>
+                      {referral.usedByUserId.substring(0, 8)}…
                     </td>
-                    <td style={{ padding: theme.spacing.md, textAlign: 'center' }}>
-                      <span style={statusBadgeStyles(referral.status)}>
-                        {referral.status.toUpperCase()}
-                      </span>
-                    </td>
-                    <td style={{ padding: theme.spacing.md, textAlign: 'center', color: theme.colors.text.secondary, fontSize: theme.typography.fontSize.sm }}>
-                      {new Date(referral.signupDate).toLocaleDateString()}
-                    </td>
-                    <td style={{ padding: theme.spacing.md, textAlign: 'right', color: theme.colors.accent, fontWeight: 600 }}>
-                      {referral.totalEarned.toFixed(2)} BZY
-                    </td>
-                    <td style={{ padding: theme.spacing.md, textAlign: 'center', color: theme.colors.text.secondary, fontSize: theme.typography.fontSize.sm }}>
-                      {referral.lastActivity}
+                    <td style={{ padding: theme.spacing.md, textAlign: 'right', color: theme.colors.text.secondary, fontSize: theme.typography.fontSize.sm }}>
+                      {new Date(referral.usedAt).toLocaleDateString()}
                     </td>
                   </tr>
                 ))}
